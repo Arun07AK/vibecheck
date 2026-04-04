@@ -21,14 +21,27 @@ const SCRIPTED_TESTS = [
   { name: 'Submit empty form', action: 'click', selector: 'button[type="submit"], input[type="submit"]' },
 ];
 
+const { execSync } = require('child_process');
+const http = require('http');
+
 function detectStartCommand(repoPath) {
   const pkgPath = path.join(repoPath, 'package.json');
   if (fs.existsSync(pkgPath)) {
     try {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+      // Prefer direct node execution over npm (faster, better stdout)
+      if (pkg.main && fs.existsSync(path.join(repoPath, pkg.main))) {
+        return { cmd: 'node', args: [pkg.main], cwd: repoPath };
+      }
+      // Check for common server files
+      for (const f of ['server.js', 'index.js', 'app.js', 'src/index.js', 'src/server.js']) {
+        if (fs.existsSync(path.join(repoPath, f))) {
+          return { cmd: 'node', args: [f], cwd: repoPath };
+        }
+      }
+      // Fall back to npm scripts
       if (pkg.scripts?.start) return { cmd: 'npm', args: ['start'], cwd: repoPath };
       if (pkg.scripts?.dev) return { cmd: 'npm', args: ['run', 'dev'], cwd: repoPath };
-      if (pkg.main) return { cmd: 'node', args: [pkg.main], cwd: repoPath };
     } catch {}
   }
   if (fs.existsSync(path.join(repoPath, 'app.py'))) return { cmd: 'python3', args: ['app.py'], cwd: repoPath };
@@ -37,31 +50,70 @@ function detectStartCommand(repoPath) {
   return null;
 }
 
-function startApp(repoPath) {
+function installDeps(repoPath) {
+  const pkgPath = path.join(repoPath, 'package.json');
+  const nodeModules = path.join(repoPath, 'node_modules');
+  if (fs.existsSync(pkgPath) && !fs.existsSync(nodeModules)) {
+    try {
+      execSync('npm install --production --no-audit --no-fund', {
+        cwd: repoPath, timeout: 30000, stdio: 'pipe',
+      });
+    } catch {}
+  }
+}
+
+function waitForPort(port, timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const check = () => {
+      const req = http.get(`http://localhost:${port}/`, (res) => {
+        res.resume();
+        resolve();
+      });
+      req.on('error', () => {
+        if (Date.now() - start > timeoutMs) {
+          reject(new Error(`App did not respond on port ${port} within ${timeoutMs}ms`));
+        } else {
+          setTimeout(check, 500);
+        }
+      });
+      req.setTimeout(2000, () => { req.destroy(); });
+    };
+    check();
+  });
+}
+
+function startApp(repoPath) {
+  return new Promise(async (resolve, reject) => {
     const startInfo = detectStartCommand(repoPath);
     if (!startInfo) return reject(new Error('Cannot detect how to start the app'));
+
+    // Install deps if needed
+    installDeps(repoPath);
 
     const port = 4000 + Math.floor(Math.random() * 1000);
     const env = { ...process.env, PORT: String(port) };
     const proc = spawn(startInfo.cmd, startInfo.args, { cwd: startInfo.cwd, env, stdio: 'pipe' });
 
-    let started = false;
-    const timeout = setTimeout(() => {
-      if (!started) { started = true; resolve({ proc, port }); }
-    }, 5000);
+    let errOutput = '';
+    proc.stderr.on('data', (d) => { errOutput += d.toString(); });
+    proc.stdout.on('data', () => {});
 
-    proc.stdout.on('data', (data) => {
-      const out = data.toString();
-      if (!started && (out.includes('listening') || out.includes('running') || out.includes('started') || out.includes('port'))) {
-        started = true;
-        clearTimeout(timeout);
-        setTimeout(() => resolve({ proc, port }), 1000);
+    proc.on('error', (err) => reject(err));
+    proc.on('exit', (code) => {
+      if (code !== null && code !== 0) {
+        reject(new Error(`App exited with code ${code}: ${errOutput.slice(0, 200)}`));
       }
     });
 
-    proc.stderr.on('data', () => {});
-    proc.on('error', (err) => { if (!started) { started = true; reject(err); } });
+    // Wait for the app to actually respond to HTTP
+    try {
+      await waitForPort(port, 15000);
+      resolve({ proc, port });
+    } catch (err) {
+      proc.kill('SIGTERM');
+      reject(err);
+    }
   });
 }
 
@@ -83,13 +135,13 @@ async function runScriptedSimulation(page, baseUrl, consoleErrors) {
           await el.type(test.value);
           const form = await page.$('form');
           if (form) await form.evaluate(f => f.submit()).catch(() => {});
-          await page.waitForTimeout(1000);
+          await new Promise(r => setTimeout(r, 1000));
         }
       } else if (test.action === 'click') {
         const els = await page.$$(test.selector);
         for (const el of els.slice(0, 3)) {
           await el.click().catch(() => {});
-          await page.waitForTimeout(500);
+          await new Promise(r => setTimeout(r, 500));
         }
       }
     } catch {}
@@ -147,7 +199,7 @@ async function runAISimulation(page, baseUrl, consoleErrors) {
         results.push({ step, action: 'goto', detail: `Navigated to ${action.url}` });
       }
 
-      await page.waitForTimeout(1000);
+      await new Promise(r => setTimeout(r, 1000));
     } catch (err) {
       results.push({ step, action: 'error', detail: err.message });
     }
