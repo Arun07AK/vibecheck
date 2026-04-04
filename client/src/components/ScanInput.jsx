@@ -76,43 +76,76 @@ function ScanInput({ onScan }) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-surface border border-border rounded-lg p-1 flex gap-1">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Mode toggle — glass pill */}
+        <div className="glass rounded-2xl p-1.5 flex gap-1.5">
           <button type="button" onClick={() => setMode('url')}
-            className={`flex-1 py-2 px-4 rounded text-xs font-semibold uppercase tracking-wider transition-all ${mode === 'url' ? 'bg-cyan text-bg' : 'text-dim hover:text-white'}`}>
+            className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all duration-300 ${
+              mode === 'url'
+                ? 'bg-gradient-to-r from-cyan to-[#00C6FF] text-[#0A0A0F] shadow-[0_0_30px_rgba(0,240,255,0.3)]'
+                : 'text-dim hover:text-white hover:bg-white/5'
+            }`}>
             GitHub URL
           </button>
           <button type="button" onClick={() => setMode('local')}
-            className={`flex-1 py-2 px-4 rounded text-xs font-semibold uppercase tracking-wider transition-all ${mode === 'local' ? 'bg-cyan text-bg' : 'text-dim hover:text-white'}`}>
+            className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all duration-300 ${
+              mode === 'local'
+                ? 'bg-gradient-to-r from-cyan to-[#00C6FF] text-[#0A0A0F] shadow-[0_0_30px_rgba(0,240,255,0.3)]'
+                : 'text-dim hover:text-white hover:bg-white/5'
+            }`}>
             Local Path
           </button>
         </div>
 
-        <input type="text"
-          value={mode === 'url' ? url : localPath}
-          onChange={(e) => mode === 'url' ? setUrl(e.target.value) : setLocalPath(e.target.value)}
-          placeholder={mode === 'url' ? 'https://github.com/user/repo' : '/path/to/your/project'}
-          className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-white placeholder-[#555] focus:outline-none focus:border-cyan text-sm font-mono"
-        />
+        {/* Input — glowing border on focus */}
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan/0 via-cyan/0 to-cyan/0 group-focus-within:from-cyan/20 group-focus-within:via-cyan/40 group-focus-within:to-cyan/20 rounded-xl blur-sm transition-all duration-500" />
+          <input type="text"
+            value={mode === 'url' ? url : localPath}
+            onChange={(e) => mode === 'url' ? setUrl(e.target.value) : setLocalPath(e.target.value)}
+            placeholder={mode === 'url' ? 'https://github.com/user/repo' : '/path/to/your/project'}
+            className="relative w-full glass rounded-xl px-5 py-4 text-white placeholder-[#444] focus:outline-none text-sm font-mono bg-[#0E0E14]"
+          />
+        </div>
 
-        <label className="flex items-center gap-3 text-dim cursor-pointer hover:text-white/60 transition-colors">
-          <div className={`w-9 h-5 rounded-full relative transition-colors ${enableSimulation ? 'bg-cyan' : 'bg-[#333]'}`}>
-            <div className={`w-3.5 h-3.5 rounded-full absolute top-[3px] transition-transform ${enableSimulation ? 'translate-x-[18px] bg-bg' : 'translate-x-[3px] bg-dim'}`} />
+        {/* Simulation toggle — refined */}
+        <label className="flex items-center gap-3 text-dim cursor-pointer hover:text-white/70 transition-colors group">
+          <div className={`w-11 h-6 rounded-full relative transition-all duration-300 ${
+            enableSimulation
+              ? 'bg-gradient-to-r from-cyan to-[#00C6FF] shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+              : 'bg-[#1a1a24] border border-[rgba(244,246,255,0.08)]'
+          }`}>
+            <div className={`w-4 h-4 rounded-full absolute top-1 transition-all duration-300 ${
+              enableSimulation ? 'translate-x-[22px] bg-[#0A0A0F]' : 'translate-x-1 bg-dim'
+            }`} />
           </div>
           <input type="checkbox" checked={enableSimulation} onChange={(e) => setEnableSimulation(e.target.checked)} className="sr-only" />
-          <span className="text-xs">Enable AI Simulation (Playwright MCP + Claude)</span>
+          <span className="text-xs">Enable AI Simulation <span className="text-[#444]">(Playwright MCP + Claude)</span></span>
         </label>
 
-        <button type="submit" className="w-full py-3 bg-cyan text-bg font-bold text-sm rounded-lg hover:bg-cyan/90 transition-colors uppercase tracking-wider">
-          Scan Repository
+        {/* Submit — gradient with glow + hover effect */}
+        <button type="submit"
+          className="relative w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest overflow-hidden transition-all duration-300 group
+            bg-gradient-to-r from-cyan to-[#00C6FF] text-[#0A0A0F]
+            hover:shadow-[0_0_40px_rgba(0,240,255,0.4)] hover:scale-[1.01] active:scale-[0.99]">
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 2L12 22M2 12L22 12" className="group-hover:animate-spin" style={{ transformOrigin: 'center', animationDuration: '2s' }} />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            Scan Repository
+          </span>
+          {/* Shimmer overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
         </button>
       </form>
 
-      <div className="mt-10 grid grid-cols-4 gap-3 text-center">
+      {/* Stats — glass cards with glow accent */}
+      <div className="mt-12 grid grid-cols-4 gap-3 text-center">
         {[{ label: 'Scanners', value: '4' }, { label: 'Secret Patterns', value: '20+' }, { label: 'CVE Database', value: 'OSV.dev' }, { label: 'AI Agents', value: '5' }].map((stat) => (
-          <div key={stat.label} className="bg-surface border border-border rounded-lg p-3">
-            <div className="text-lg font-bold text-cyan font-mono">{stat.value}</div>
-            <div className="text-[10px] text-dim mt-1 uppercase tracking-wider">{stat.label}</div>
+          <div key={stat.label} className="glass rounded-xl p-4 hover:border-cyan/20 transition-all duration-300 hover:-translate-y-1 group">
+            <div className="text-xl font-bold text-cyan font-mono group-hover:drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] transition-all">{stat.value}</div>
+            <div className="text-[9px] text-dim mt-1 uppercase tracking-widest">{stat.label}</div>
           </div>
         ))}
       </div>
