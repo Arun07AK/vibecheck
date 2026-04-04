@@ -10,6 +10,7 @@ function initDB() {
     CREATE TABLE IF NOT EXISTS scans (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       repo_url TEXT NOT NULL,
+      repo_path TEXT,
       score INTEGER,
       verdict TEXT,
       issue_count INTEGER DEFAULT 0,

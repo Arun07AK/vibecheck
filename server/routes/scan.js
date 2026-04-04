@@ -46,9 +46,9 @@ async function runScanners(repoPath) {
   return [...secrets, ...deps, ...pii, ...codeSmells];
 }
 
-function saveScan(db, repoUrl, score, verdict, issues) {
+function saveScan(db, repoUrl, repoPath, score, verdict, issues) {
   const insertScan = db.prepare(
-    'INSERT INTO scans (repo_url, score, verdict, issue_count) VALUES (?, ?, ?, ?)'
+    'INSERT INTO scans (repo_url, repo_path, score, verdict, issue_count) VALUES (?, ?, ?, ?, ?)'
   );
   const insertIssue = db.prepare(
     'INSERT INTO issues (scan_id, scanner, severity, title, description, file_path, line_number, code_snippet, fix_suggestion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -60,7 +60,7 @@ function saveScan(db, repoUrl, score, verdict, issues) {
   `);
 
   const transaction = db.transaction(() => {
-    const { lastInsertRowid: scanId } = insertScan.run(repoUrl, score, verdict, issues.length);
+    const { lastInsertRowid: scanId } = insertScan.run(repoUrl, repoPath, score, verdict, issues.length);
     for (const issue of issues) {
       insertIssue.run(
         scanId, issue.scanner, issue.severity, issue.title,
@@ -112,7 +112,7 @@ module.exports = function (db) {
 
       const score = calculateScore(issues);
       const verdict = getVerdict(score);
-      const scanId = saveScan(db, url, score, verdict, issues);
+      const scanId = saveScan(db, url, cloneDir, score, verdict, issues);
 
       // Delay cleanup so heatmap can read files (clean after 5 min)
       setTimeout(() => cleanup(cloneDir), 5 * 60 * 1000);
@@ -171,7 +171,7 @@ module.exports = function (db) {
 
       const score = calculateScore(issues);
       const verdict = getVerdict(score);
-      const scanId = saveScan(db, localPath, score, verdict, issues);
+      const scanId = saveScan(db, localPath, localPath, score, verdict, issues);
 
       res.json({
         scanId,
@@ -262,7 +262,7 @@ module.exports = function (db) {
     const scan = db.prepare('SELECT * FROM scans WHERE id = ?').get(req.params.scanId);
     if (!scan) return res.status(404).json({ error: 'Scan not found' });
 
-    const repoPath = scan.repo_url;
+    const repoPath = scan.repo_path || scan.repo_url;
     const issues = db.prepare('SELECT * FROM issues WHERE scan_id = ?').all(scan.id);
 
     // Group issues by file
