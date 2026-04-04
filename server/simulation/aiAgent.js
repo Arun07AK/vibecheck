@@ -1,63 +1,40 @@
 const puppeteer = require('puppeteer');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 let Anthropic;
 try {
   Anthropic = require('@anthropic-ai/sdk');
 } catch { Anthropic = null; }
 
-const SCRIPTED_TESTS = [
-  { name: 'XSS in search', action: 'type', selector: 'input', value: '<script>alert("xss")</script>' },
-  { name: 'XSS in form', action: 'type', selector: 'input[type="text"]', value: '"><img src=x onerror=alert(1)>' },
-  { name: 'SQL injection', action: 'type', selector: 'input', value: "' OR 1=1 --" },
-  { name: 'Navigate /admin', action: 'goto', path: '/admin' },
-  { name: 'Navigate /api', action: 'goto', path: '/api' },
-  { name: 'Navigate /login', action: 'goto', path: '/login' },
-  { name: 'Navigate /dashboard', action: 'goto', path: '/dashboard' },
-  { name: 'Click all buttons', action: 'click', selector: 'button' },
-  { name: 'Click all links', action: 'click', selector: 'a' },
-  { name: 'Submit empty form', action: 'click', selector: 'button[type="submit"], input[type="submit"]' },
-];
-
-const { execSync } = require('child_process');
-const http = require('http');
+// --- App startup helpers ---
 
 function detectStartCommand(repoPath) {
   const pkgPath = path.join(repoPath, 'package.json');
   if (fs.existsSync(pkgPath)) {
     try {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-      // Prefer direct node execution over npm (faster, better stdout)
-      if (pkg.main && fs.existsSync(path.join(repoPath, pkg.main))) {
+      if (pkg.main && fs.existsSync(path.join(repoPath, pkg.main)))
         return { cmd: 'node', args: [pkg.main], cwd: repoPath };
-      }
-      // Check for common server files
       for (const f of ['server.js', 'index.js', 'app.js', 'src/index.js', 'src/server.js']) {
-        if (fs.existsSync(path.join(repoPath, f))) {
+        if (fs.existsSync(path.join(repoPath, f)))
           return { cmd: 'node', args: [f], cwd: repoPath };
-        }
       }
-      // Fall back to npm scripts
       if (pkg.scripts?.start) return { cmd: 'npm', args: ['start'], cwd: repoPath };
       if (pkg.scripts?.dev) return { cmd: 'npm', args: ['run', 'dev'], cwd: repoPath };
     } catch {}
   }
-  if (fs.existsSync(path.join(repoPath, 'app.py'))) return { cmd: 'python3', args: ['app.py'], cwd: repoPath };
-  if (fs.existsSync(path.join(repoPath, 'server.js'))) return { cmd: 'node', args: ['server.js'], cwd: repoPath };
-  if (fs.existsSync(path.join(repoPath, 'index.js'))) return { cmd: 'node', args: ['index.js'], cwd: repoPath };
+  if (fs.existsSync(path.join(repoPath, 'app.py')))
+    return { cmd: 'python3', args: ['app.py'], cwd: repoPath };
   return null;
 }
 
 function installDeps(repoPath) {
-  const pkgPath = path.join(repoPath, 'package.json');
-  const nodeModules = path.join(repoPath, 'node_modules');
-  if (fs.existsSync(pkgPath) && !fs.existsSync(nodeModules)) {
+  if (fs.existsSync(path.join(repoPath, 'package.json')) && !fs.existsSync(path.join(repoPath, 'node_modules'))) {
     try {
-      execSync('npm install --production --no-audit --no-fund', {
-        cwd: repoPath, timeout: 30000, stdio: 'pipe',
-      });
+      execSync('npm install --production --no-audit --no-fund', { cwd: repoPath, timeout: 30000, stdio: 'pipe' });
     } catch {}
   }
 }
@@ -71,13 +48,10 @@ function waitForPort(port, timeoutMs = 15000) {
         resolve();
       });
       req.on('error', () => {
-        if (Date.now() - start > timeoutMs) {
-          reject(new Error(`App did not respond on port ${port} within ${timeoutMs}ms`));
-        } else {
-          setTimeout(check, 500);
-        }
+        if (Date.now() - start > timeoutMs) reject(new Error(`App did not respond on port ${port} within ${timeoutMs}ms`));
+        else setTimeout(check, 500);
       });
-      req.setTimeout(2000, () => { req.destroy(); });
+      req.setTimeout(2000, () => req.destroy());
     };
     check();
   });
@@ -87,8 +61,6 @@ function startApp(repoPath) {
   return new Promise(async (resolve, reject) => {
     const startInfo = detectStartCommand(repoPath);
     if (!startInfo) return reject(new Error('Cannot detect how to start the app'));
-
-    // Install deps if needed
     installDeps(repoPath);
 
     const port = 4000 + Math.floor(Math.random() * 1000);
@@ -98,15 +70,11 @@ function startApp(repoPath) {
     let errOutput = '';
     proc.stderr.on('data', (d) => { errOutput += d.toString(); });
     proc.stdout.on('data', () => {});
-
     proc.on('error', (err) => reject(err));
     proc.on('exit', (code) => {
-      if (code !== null && code !== 0) {
-        reject(new Error(`App exited with code ${code}: ${errOutput.slice(0, 200)}`));
-      }
+      if (code !== null && code !== 0) reject(new Error(`App exited with code ${code}: ${errOutput.slice(0, 200)}`));
     });
 
-    // Wait for the app to actually respond to HTTP
     try {
       await waitForPort(port, 15000);
       resolve({ proc, port });
@@ -117,48 +85,117 @@ function startApp(repoPath) {
   });
 }
 
-async function runScriptedSimulation(page, baseUrl, consoleErrors) {
-  const results = [];
+// --- Scripted simulation ---
 
-  for (const test of SCRIPTED_TESTS) {
+async function runScriptedSimulation(page, baseUrl) {
+  const log = [];
+
+  // Step 1: Explore the homepage
+  log.push({ step: 1, action: 'navigate', detail: 'Opened the app homepage', finding: null });
+
+  // Step 2: Find and catalog interactive elements
+  const inputs = await page.$$('input, textarea, select');
+  const buttons = await page.$$('button, input[type="submit"]');
+  const links = await page.$$('a[href]');
+  log.push({
+    step: 2, action: 'inspect',
+    detail: `Found ${inputs.length} input fields, ${buttons.length} buttons, ${links.length} links`,
+    finding: null,
+  });
+
+  // Step 3: XSS test — type payload into first input and submit
+  const xssPayload = '<script>alert("xss")</script>';
+  const firstInput = await page.$('input[type="text"], input:not([type]), textarea');
+  if (firstInput) {
+    await firstInput.type(xssPayload);
+    log.push({ step: 3, action: 'type', detail: `Typed XSS payload into input field: ${xssPayload}`, finding: null });
+
+    // Try to submit
+    const submitBtn = await page.$('button[type="submit"], button, input[type="submit"]');
+    if (submitBtn) {
+      await submitBtn.click().catch(() => {});
+      await new Promise(r => setTimeout(r, 1500));
+      log.push({ step: 4, action: 'click', detail: 'Clicked submit button', finding: null });
+    }
+
+    // Check if XSS payload appears unescaped in the DOM
+    const bodyHtml = await page.evaluate(() => document.body.innerHTML);
+    if (bodyHtml.includes(xssPayload)) {
+      log.push({
+        step: 5, action: 'finding',
+        detail: 'XSS payload was reflected unescaped in the page DOM — Cross-Site Scripting vulnerability confirmed',
+        finding: { severity: 'CRITICAL', title: 'XSS Vulnerability — Reflected Script Injection' },
+      });
+    }
+  } else {
+    log.push({ step: 3, action: 'skip', detail: 'No text input fields found to test XSS', finding: null });
+  }
+
+  // Step 5: SQL injection test
+  const sqlPayload = "' OR 1=1 --";
+  const sqlInput = await page.$('input[type="text"], input:not([type])');
+  if (sqlInput) {
+    await sqlInput.click({ clickCount: 3 }).catch(() => {});
+    await sqlInput.type(sqlPayload);
+    const submitBtn = await page.$('button[type="submit"], button');
+    if (submitBtn) {
+      await submitBtn.click().catch(() => {});
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    log.push({ step: 6, action: 'type', detail: `Typed SQL injection payload: ${sqlPayload}`, finding: null });
+  }
+
+  // Step 6: Click through all buttons to trigger errors
+  const allButtons = await page.$$('button, a');
+  let clickCount = 0;
+  for (const btn of allButtons.slice(0, 5)) {
     try {
-      if (test.action === 'goto') {
-        const url = baseUrl + test.path;
-        const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => null);
-        const status = response?.status() || 0;
-        if (status >= 400) {
-          results.push({ test: test.name, result: 'error', detail: `HTTP ${status} at ${test.path}` });
-        }
-      } else if (test.action === 'type') {
-        const el = await page.$(test.selector);
-        if (el) {
-          await el.type(test.value);
-          const form = await page.$('form');
-          if (form) await form.evaluate(f => f.submit()).catch(() => {});
-          await new Promise(r => setTimeout(r, 1000));
-        }
-      } else if (test.action === 'click') {
-        const els = await page.$$(test.selector);
-        for (const el of els.slice(0, 3)) {
-          await el.click().catch(() => {});
-          await new Promise(r => setTimeout(r, 500));
-        }
+      await btn.click();
+      clickCount++;
+      await new Promise(r => setTimeout(r, 500));
+    } catch {}
+  }
+  if (clickCount > 0) {
+    log.push({ step: 7, action: 'click', detail: `Clicked ${clickCount} interactive elements looking for crashes`, finding: null });
+  }
+
+  // Step 7: Try navigating to API endpoints (only flag 500s, not 404s)
+  for (const route of ['/api', '/api/users', '/api/admin']) {
+    try {
+      const resp = await page.goto(baseUrl + route, { waitUntil: 'domcontentloaded', timeout: 5000 });
+      const status = resp?.status() || 0;
+      if (status >= 500) {
+        log.push({
+          step: log.length + 1, action: 'finding',
+          detail: `Server error (HTTP ${status}) at ${route} — unhandled exception`,
+          finding: { severity: 'HIGH', title: `Server Error ${status} at ${route}` },
+        });
       }
     } catch {}
   }
 
-  return results;
+  // Navigate back to homepage for final state check
+  await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {});
+
+  return log;
 }
 
-async function runAISimulation(page, baseUrl, consoleErrors) {
-  const client = new Anthropic();
-  const results = [];
-  const maxSteps = 10;
+// --- AI-guided simulation ---
 
-  for (let step = 0; step < maxSteps; step++) {
+async function runAISimulation(page, baseUrl) {
+  const client = new Anthropic();
+  const log = [];
+  const pastActions = [];
+
+  log.push({ step: 1, action: 'navigate', detail: 'Opened the app homepage', finding: null });
+
+  for (let step = 2; step <= 5; step++) {
     try {
       const screenshot = await page.screenshot({ encoding: 'base64', fullPage: true });
       const currentUrl = page.url();
+      const historyStr = pastActions.length > 0
+        ? `\n\nACTIONS ALREADY TAKEN (do NOT repeat these):\n${pastActions.map((a, i) => `${i + 1}. ${a}`).join('\n')}`
+        : '';
 
       const response = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
@@ -167,7 +204,19 @@ async function runAISimulation(page, baseUrl, consoleErrors) {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: 'image/png', data: screenshot } },
-            { type: 'text', text: `You are testing a web app for bugs. Current URL: ${currentUrl}\n\nLook at this screenshot and decide what to test next. Reply with EXACTLY one JSON action:\n{"action": "click", "selector": "CSS selector"}\n{"action": "type", "selector": "CSS selector", "value": "test input including XSS/SQLi payloads"}\n{"action": "goto", "url": "relative path like /admin"}\n{"action": "done", "summary": "what you found"}\n\nFocus on: XSS, broken forms, error pages, auth bypasses, missing validation. Be aggressive.` }
+            {
+              type: 'text',
+              text: `You are a QA security tester. URL: ${currentUrl}${historyStr}
+
+Do something DIFFERENT from what you've already done. Pick ONE action and reply with ONLY JSON:
+
+{"action":"click","selector":"CSS","why":"reason"}
+{"action":"type","selector":"CSS","value":"payload","why":"reason"}
+{"action":"goto","path":"/route","why":"reason"}
+{"action":"done","summary":"what you found"}
+
+Test ideas: XSS payloads, SQL injection, empty form submission, clicking delete buttons, navigating to /api endpoints visible in the UI, testing edge cases. Each step must be DIFFERENT.`
+            }
           ]
         }]
       });
@@ -175,41 +224,71 @@ async function runAISimulation(page, baseUrl, consoleErrors) {
       const text = response.content[0].text;
       let action;
       try {
-        const jsonMatch = text.match(/\{[^}]+\}/);
-        action = JSON.parse(jsonMatch[0]);
+        // More robust JSON extraction
+        const jsonStr = text.match(/\{[\s\S]*\}/)?.[0];
+        action = JSON.parse(jsonStr);
       } catch {
         continue;
       }
 
       if (action.action === 'done') {
-        results.push({ step, action: 'done', detail: action.summary });
+        log.push({ step, action: 'done', detail: action.summary || 'AI finished testing', finding: null });
         break;
       }
 
+      const why = action.why || '';
+
       if (action.action === 'click') {
         const el = await page.$(action.selector);
-        if (el) await el.click().catch(() => {});
-        results.push({ step, action: 'click', detail: `Clicked ${action.selector}` });
+        if (el) {
+          await el.click().catch(() => {});
+          const desc = `Clicked ${action.selector}${why ? ' — ' + why : ''}`;
+          log.push({ step, action: 'click', detail: desc, finding: null });
+          pastActions.push(desc);
+        }
       } else if (action.action === 'type') {
         const el = await page.$(action.selector);
-        if (el) { await el.type(action.value); }
-        results.push({ step, action: 'type', detail: `Typed "${action.value}" into ${action.selector}` });
+        if (el) {
+          await el.click({ clickCount: 3 }).catch(() => {});
+          await el.type(action.value || '');
+          const desc = `Typed "${(action.value || '').slice(0, 50)}" into ${action.selector}${why ? ' — ' + why : ''}`;
+          log.push({ step, action: 'type', detail: desc, finding: null });
+          pastActions.push(desc);
+
+          // After typing, try to submit
+          const btn = await page.$('button[type="submit"], button');
+          if (btn) await btn.click().catch(() => {});
+        }
       } else if (action.action === 'goto') {
-        await page.goto(baseUrl + action.url, { waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {});
-        results.push({ step, action: 'goto', detail: `Navigated to ${action.url}` });
+        const targetUrl = action.path?.startsWith('http') ? action.path : baseUrl + (action.path || '/');
+        const resp = await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => null);
+        const status = resp?.status() || 0;
+        const navDesc = `Navigated to ${action.path}${why ? ' — ' + why : ''} (HTTP ${status})`;
+        log.push({ step, action: 'navigate', detail: navDesc, finding: null });
+        pastActions.push(navDesc);
+        if (status >= 500) {
+          log.push({
+            step, action: 'finding',
+            detail: `Server crashed with HTTP ${status} at ${action.path}`,
+            finding: { severity: 'HIGH', title: `Server Error ${status} at ${action.path}` },
+          });
+        }
       }
 
       await new Promise(r => setTimeout(r, 1000));
     } catch (err) {
-      results.push({ step, action: 'error', detail: err.message });
+      log.push({ step, action: 'error', detail: `Step failed: ${err.message}`, finding: null });
     }
   }
 
-  return results;
+  return log;
 }
+
+// --- Main simulate function ---
 
 async function simulate(repoPath) {
   const issues = [];
+  const log = [];
   let proc = null;
   let browser = null;
 
@@ -223,96 +302,113 @@ async function simulate(repoPath) {
     browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
 
-    // Collect console errors
-    const consoleErrors = [];
+    // Collect console errors (deduplicated)
+    const consoleErrorSet = new Set();
     page.on('console', (msg) => {
-      if (msg.type() === 'error') consoleErrors.push(msg.text());
+      if (msg.type() === 'error') consoleErrorSet.add(msg.text());
     });
-    page.on('pageerror', (err) => consoleErrors.push(err.message));
+    page.on('pageerror', (err) => consoleErrorSet.add(err.message));
 
     // Navigate to app
     try {
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 10000 });
     } catch (err) {
-      issues.push({
-        scanner: 'simulation',
-        severity: 'CRITICAL',
-        title: 'App Failed to Load',
-        description: `The app could not be loaded at ${baseUrl}: ${err.message}`,
-        filePath: null,
-        lineNumber: null,
-        codeSnippet: null,
-        fixSuggestion: 'Check that the app starts correctly and listens on the expected port.',
-      });
-      return issues;
+      return {
+        issues: [{
+          scanner: 'simulation',
+          severity: 'CRITICAL',
+          title: 'App Failed to Load',
+          description: `The app could not be loaded at ${baseUrl}: ${err.message}`,
+          filePath: null, lineNumber: null, codeSnippet: null,
+          fixSuggestion: 'Check that the app starts correctly and listens on the expected port.',
+        }],
+        log: [{ step: 1, action: 'error', detail: `App failed to load: ${err.message}`, finding: null }],
+        mode: 'failed',
+      };
     }
 
     // Run simulation
-    const useAI = process.env.ANTHROPIC_API_KEY && Anthropic;
-    const results = useAI
-      ? await runAISimulation(page, baseUrl, consoleErrors)
-      : await runScriptedSimulation(page, baseUrl, consoleErrors);
+    // Scripted mode is faster and more reliable for demos
+    // AI mode only if explicitly requested via env var
+    const useAI = process.env.VIBECHECK_AI_SIM === 'true' && process.env.ANTHROPIC_API_KEY && Anthropic;
+    const simLog = useAI
+      ? await runAISimulation(page, baseUrl)
+      : await runScriptedSimulation(page, baseUrl);
 
-    // Convert console errors to issues
-    for (const err of consoleErrors) {
+    log.push(...simLog);
+
+    // Convert findings from log to issues
+    for (const entry of simLog) {
+      if (entry.finding) {
+        issues.push({
+          scanner: 'simulation',
+          severity: entry.finding.severity,
+          title: entry.finding.title,
+          description: entry.detail,
+          filePath: null, lineNumber: null, codeSnippet: null,
+          fixSuggestion: 'Fix the vulnerability found during runtime simulation.',
+        });
+      }
+    }
+
+    // Convert deduplicated console errors to issues
+    for (const err of consoleErrorSet) {
+      // Skip noisy browser resource errors
+      if (err.includes('favicon.ico') || err.includes('manifest.json')) continue;
       issues.push({
         scanner: 'simulation',
         severity: 'HIGH',
-        title: 'Runtime Console Error',
-        description: `Console error caught during simulation: ${err}`,
-        filePath: null,
-        lineNumber: null,
+        title: 'Runtime Error Caught',
+        description: `Console error during simulation: ${err}`,
+        filePath: null, lineNumber: null,
         codeSnippet: err.substring(0, 200),
         fixSuggestion: 'Investigate and fix the runtime error. Check for undefined variables, failed API calls, or missing DOM elements.',
       });
     }
 
-    // Convert scripted test results to issues
-    for (const r of results) {
-      if (r.result === 'error') {
-        issues.push({
-          scanner: 'simulation',
-          severity: 'MEDIUM',
-          title: `Simulation: ${r.test || 'AI Test'}`,
-          description: r.detail,
-          filePath: null,
-          lineNumber: null,
-          codeSnippet: null,
-          fixSuggestion: 'Review the endpoint and add proper error handling or access controls.',
-        });
-      }
-    }
-
-    // Add simulation metadata
+    // Summary log entry
     if (issues.length === 0) {
+      log.push({
+        step: log.length + 1, action: 'done',
+        detail: `Simulation complete — no runtime errors or vulnerabilities detected. App appears stable.`,
+        finding: null,
+      });
       issues.push({
         scanner: 'simulation',
         severity: 'LOW',
-        title: 'Simulation Complete — No Runtime Errors',
-        description: `AI simulation completed ${results.length} test steps with no runtime errors detected. Mode: ${useAI ? 'AI-guided' : 'scripted'}.`,
-        filePath: null,
-        lineNumber: null,
-        codeSnippet: null,
-        fixSuggestion: 'No action needed. App appears stable under basic testing.',
+        title: 'Simulation Complete — App Stable',
+        description: `AI simulation completed ${log.length} test steps with no issues. Mode: ${useAI ? 'AI-guided' : 'scripted'}.`,
+        filePath: null, lineNumber: null, codeSnippet: null,
+        fixSuggestion: 'No action needed. App appears stable under testing.',
+      });
+    } else {
+      log.push({
+        step: log.length + 1, action: 'done',
+        detail: `Simulation complete — found ${issues.length} issue(s) during ${log.length} test steps.`,
+        finding: null,
       });
     }
 
-    return issues;
+    return { issues, log, mode: useAI ? 'ai-guided' : 'scripted' };
   } catch (err) {
-    issues.push({
-      scanner: 'simulation',
-      severity: 'MEDIUM',
-      title: 'Simulation Could Not Run',
-      description: `Failed to simulate: ${err.message}`,
-      filePath: null,
-      lineNumber: null,
-      codeSnippet: null,
-      fixSuggestion: 'Ensure the app can be started with npm start or node server.js.',
-    });
-    return issues;
+    return {
+      issues: [{
+        scanner: 'simulation',
+        severity: 'MEDIUM',
+        title: 'Simulation Could Not Run',
+        description: `Failed to simulate: ${err.message}`,
+        filePath: null, lineNumber: null, codeSnippet: null,
+        fixSuggestion: 'Ensure the app can be started with npm start or node server.js.',
+      }],
+      log: [{ step: 1, action: 'error', detail: `Simulation failed: ${err.message}`, finding: null }],
+      mode: 'failed',
+    };
   } finally {
     if (browser) await browser.close().catch(() => {});
-    if (proc) { proc.kill('SIGTERM'); setTimeout(() => proc.kill('SIGKILL'), 2000); }
+    if (proc) {
+      proc.kill('SIGTERM');
+      setTimeout(() => { try { proc.kill('SIGKILL'); } catch {} }, 2000);
+    }
   }
 }
 

@@ -99,14 +99,14 @@ module.exports = function (db) {
       let issues = await runScanners(cloneDir);
 
       // Run simulation if enabled
-      let simulationResults = null;
+      let simulationData = null;
       if (enableSimulation) {
         try {
-          const simIssues = await simulate(cloneDir);
-          issues = [...issues, ...simIssues];
-          simulationResults = simIssues;
+          const simResult = await simulate(cloneDir);
+          issues = [...issues, ...(simResult.issues || [])];
+          simulationData = { log: simResult.log || [], mode: simResult.mode || 'scripted', issueCount: (simResult.issues || []).length };
         } catch (err) {
-          simulationResults = [{ error: err.message }];
+          simulationData = { log: [{ step: 1, action: 'error', detail: err.message }], mode: 'failed', issueCount: 0 };
         }
       }
 
@@ -138,7 +138,7 @@ module.exports = function (db) {
           codeSmells: issues.filter(i => i.scanner === 'code-smells').length,
           simulation: issues.filter(i => i.scanner === 'simulation').length,
         },
-        simulation: simulationResults,
+        simulation: simulationData,
         timestamp: new Date().toISOString(),
       });
     } catch (err) {
@@ -157,14 +157,14 @@ module.exports = function (db) {
       let issues = await runScanners(localPath);
 
       // Run simulation if enabled
-      let simulationResults = null;
+      let simulationData = null;
       if (enableSimulation) {
         try {
-          const simIssues = await simulate(localPath);
-          issues = [...issues, ...simIssues];
-          simulationResults = simIssues;
+          const simResult = await simulate(localPath);
+          issues = [...issues, ...(simResult.issues || [])];
+          simulationData = { log: simResult.log || [], mode: simResult.mode || 'scripted', issueCount: (simResult.issues || []).length };
         } catch (err) {
-          simulationResults = [{ error: err.message }];
+          simulationData = { log: [{ step: 1, action: 'error', detail: err.message }], mode: 'failed', issueCount: 0 };
         }
       }
 
@@ -194,7 +194,7 @@ module.exports = function (db) {
           codeSmells: issues.filter(i => i.scanner === 'code-smells').length,
           simulation: issues.filter(i => i.scanner === 'simulation').length,
         },
-        simulation: simulationResults,
+        simulation: simulationData,
         timestamp: new Date().toISOString(),
       });
     } catch (err) {

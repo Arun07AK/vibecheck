@@ -6,6 +6,7 @@ import IssueCard from './IssueCard';
 import AgentResults from './AgentResults';
 import Badges from './Badges';
 import CodeHeatmap from './CodeHeatmap';
+import SimulationResults from './SimulationResults';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
@@ -118,6 +119,9 @@ function ScanResults({ data, onReset }) {
           <span className="text-teal">{data.scanId}</span>
         </span>
       </div>
+
+      {/* AI Simulation Timeline */}
+      {data.simulation && <SimulationResults simulation={data.simulation} />}
 
       {/* Code Heatmap */}
       <CodeHeatmap scanId={data.scanId} />
