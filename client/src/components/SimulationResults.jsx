@@ -2,189 +2,113 @@ import { Compass, Search, Keyboard, MousePointer, AlertTriangle, CheckCircle2, X
 import { useState } from 'react';
 
 const ACTION_MAP = {
-  navigate:          { Icon: Globe,          label: 'Navigate' },
-  snapshot:          { Icon: Eye,            label: 'Snapshot' },
-  click:             { Icon: MousePointer,   label: 'Click' },
-  type:              { Icon: Keyboard,       label: 'Type' },
-  fill:              { Icon: Keyboard,       label: 'Fill' },
-  evaluate:          { Icon: Terminal,        label: 'Evaluate' },
-  console_messages:  { Icon: MessageSquare,  label: 'Console' },
-  handle_dialog:     { Icon: AlertTriangle,  label: 'Dialog' },
-  tabs:              { Icon: Layers,         label: 'Tabs' },
-  close:             { Icon: X,              label: 'Close' },
-  inspect:           { Icon: Search,         label: 'Inspect' },
-  finding:           { Icon: ShieldAlert,    label: 'Finding' },
-  done:              { Icon: CheckCircle2,   label: 'Done' },
-  error:             { Icon: XCircle,        label: 'Error' },
+  navigate: { Icon: Globe, label: 'NAV' }, snapshot: { Icon: Eye, label: 'SNAP' },
+  click: { Icon: MousePointer, label: 'CLICK' }, type: { Icon: Keyboard, label: 'TYPE' },
+  fill: { Icon: Keyboard, label: 'FILL' }, evaluate: { Icon: Terminal, label: 'EVAL' },
+  console_messages: { Icon: MessageSquare, label: 'LOG' }, handle_dialog: { Icon: AlertTriangle, label: 'DIALOG' },
+  tabs: { Icon: Layers, label: 'TAB' }, close: { Icon: X, label: 'CLOSE' },
+  inspect: { Icon: Search, label: 'SCAN' }, finding: { Icon: ShieldAlert, label: 'VULN' },
+  done: { Icon: CheckCircle2, label: 'DONE' }, error: { Icon: XCircle, label: 'ERR' },
 };
 
 function SimulationResults({ simulation }) {
-  const [showActions, setShowActions] = useState(true);
-
+  const [showLog, setShowLog] = useState(false);
   if (!simulation) return null;
   const { log, mode, issueCount } = simulation;
   if (!log || log.length === 0) return null;
 
-  const modeLabel = mode === 'mcp' ? 'MCP (Playwright + Claude Sonnet 4.6)' : mode === 'ai-guided' ? 'AI-Guided (Claude Sonnet 4.6)' : mode === 'scripted' ? 'Scripted Tests' : 'Failed';
-
+  const modeLabel = mode === 'mcp' ? 'Playwright MCP + Claude Sonnet 4.6' : mode === 'scripted' ? 'Scripted Tests' : 'Failed';
   const findings = log.filter(e => e.finding);
   const actions = log.filter(e => !e.finding && e.action !== 'done');
-  const doneEntry = log.find(e => e.action === 'done');
 
   return (
     <div className="space-y-4">
-      {/* Header card */}
-      <div className="glass rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
+      {/* Header */}
+      <div className="bg-surface border border-border rounded-xl p-5">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white/[0.06] flex items-center justify-center">
-              <Bot className="w-5 h-5 text-white/40" strokeWidth={1.5} />
-            </div>
+            <Bot className="w-5 h-5 text-cyan" strokeWidth={1.5} />
             <div>
-              <h3 className="text-white font-semibold">AI Simulation</h3>
-              <span className="text-xs text-white/30">{modeLabel}</span>
+              <h3 className="text-white font-semibold text-sm">Multi-Agent Swarm Simulation</h3>
+              <span className="text-[10px] text-dim">{modeLabel}</span>
             </div>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 font-mono">
             <div className="text-center">
               <div className="text-lg font-bold text-white">{actions.length}</div>
-              <div className="text-[10px] text-white/25">Actions</div>
+              <div className="text-[8px] text-dim uppercase tracking-widest">Steps</div>
             </div>
             <div className="text-center">
-              <div className={`text-lg font-bold ${findings.length > 0 ? 'text-[#ff3b30]' : 'text-white/30'}`}>{findings.length}</div>
-              <div className="text-[10px] text-white/25">Breakpoints</div>
+              <div className={`text-lg font-bold ${findings.length > 0 ? 'text-critical' : 'text-cyan'}`}>{findings.length}</div>
+              <div className="text-[8px] text-dim uppercase tracking-widest">Vulns</div>
             </div>
           </div>
         </div>
-
-        {/* How it works — one line explainer */}
-        <div className="bg-white/[0.02] rounded-lg px-4 py-2.5 text-xs text-white/30 leading-relaxed">
-          Claude Sonnet 4.6 launched a real browser, navigated the app, typed attack payloads, clicked buttons, and checked for crashes — acting as a malicious user, not a code analyzer.
+        <div className="bg-terminal rounded-lg px-3 py-2 text-[10px] text-dim font-mono">
+          AI launched a headless browser, navigated the target app, injected attack payloads, and verified vulnerabilities in real-time.
         </div>
       </div>
 
-      {/* ═══ BREAKPOINTS FOUND ═══ */}
+      {/* Breakpoints */}
       <div className="space-y-2">
-        <h4 className="text-xs font-semibold text-[#ff3b30]/50 uppercase tracking-widest px-1 flex items-center gap-2">
-          <ShieldAlert className="w-3.5 h-3.5" />
-          Breakpoints Found
+        <h4 className="text-[10px] font-semibold text-critical uppercase tracking-widest px-1 flex items-center gap-2">
+          <ShieldAlert className="w-3 h-3" /> Breakpoints Found
         </h4>
-
-        {findings.length > 0 ? (
-          findings.map((entry, i) => {
-            const mapped = ACTION_MAP[entry.action] || ACTION_MAP.finding;
-            const IconComponent = mapped.Icon;
-            return (
-              <div key={i} className="glass rounded-xl px-5 py-4 border-l-2 border-l-[#ff3b30]/50 bg-[#ff3b30]/[0.02]">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#ff3b30]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <IconComponent className="w-4 h-4 text-[#ff3b30]" strokeWidth={2} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-bold text-[#ff3b30] bg-[#ff3b30]/10 px-2 py-0.5 rounded">
-                        {entry.finding.severity}
-                      </span>
-                      <span className="text-sm font-semibold text-white/90">{entry.finding.title}</span>
-                    </div>
-                    <p className="text-sm text-white/40 leading-relaxed">{entry.detail}</p>
-                  </div>
+        {findings.length > 0 ? findings.map((entry, i) => (
+          <div key={i} className="bg-surface border border-critical/20 rounded-lg px-4 py-3 border-l-2 border-l-critical">
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded bg-critical/10 flex items-center justify-center flex-shrink-0">
+                <ShieldAlert className="w-3.5 h-3.5 text-critical" strokeWidth={2} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[9px] font-bold text-white bg-critical px-2 py-0.5 rounded">{entry.finding.severity}</span>
+                  <span className="text-sm font-semibold text-white">{entry.finding.title}</span>
                 </div>
+                <p className="text-xs text-dim">{entry.detail}</p>
               </div>
-            );
-          })
-        ) : (
-          <div className="glass rounded-xl px-5 py-4 border-l-2 border-l-white/10">
+            </div>
+          </div>
+        )) : (
+          <div className="bg-surface border border-border rounded-lg px-4 py-3 border-l-2 border-l-cyan">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center">
-                <CheckCircle2 className="w-4 h-4 text-white/30" strokeWidth={2} />
-              </div>
+              <CheckCircle2 className="w-4 h-4 text-cyan" strokeWidth={2} />
               <div>
-                <p className="text-sm text-white/50">No breakpoints found</p>
-                <p className="text-xs text-white/25">App remained stable through all attack simulations</p>
+                <p className="text-sm text-white">No breakpoints found</p>
+                <p className="text-[10px] text-dim">App remained stable through all attack simulations</p>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* ═══ AI ACTIONS — Step by step ═══ */}
+      {/* Action Log — Terminal style */}
       <div className="space-y-2">
-        <button
-          onClick={() => setShowActions(!showActions)}
-          className="flex items-center gap-2 text-xs font-semibold text-white/25 uppercase tracking-widest px-1 hover:text-white/40 transition-colors"
-        >
-          <Bot className="w-3.5 h-3.5" />
-          <span>What the AI Did ({actions.length} steps)</span>
-          <ChevronDown className={`w-3 h-3 transition-transform ${showActions ? 'rotate-180' : ''}`} />
+        <button onClick={() => setShowLog(!showLog)}
+          className="flex items-center gap-2 text-[10px] font-semibold text-dim uppercase tracking-widest px-1 hover:text-white transition-colors">
+          <Terminal className="w-3 h-3" />
+          <span>swarm_stream.log ({actions.length} entries)</span>
+          <ChevronDown className={`w-3 h-3 transition-transform ${showLog ? 'rotate-180' : ''}`} />
         </button>
 
-        {showActions && (
-          <div className="relative pl-10 space-y-0">
-            {/* Vertical line */}
-            <div className="absolute left-[18px] top-3 bottom-3 w-px bg-white/[0.06]" />
-
+        {showLog && (
+          <div className="bg-terminal border border-border rounded-lg p-3 max-h-80 overflow-y-auto font-mono text-[11px]">
             {actions.map((entry, i) => {
-              const actionKey = entry.action || 'inspect';
-              const mapped = ACTION_MAP[actionKey] || { Icon: Search, label: actionKey };
-              const IconComponent = mapped.Icon;
-
-              // Categorize the action for better readability
-              const isInteraction = ['click', 'type', 'fill', 'handle_dialog'].includes(actionKey);
-              const isObservation = ['snapshot', 'console_messages', 'evaluate', 'inspect'].includes(actionKey);
-              const isNavigation = ['navigate'].includes(actionKey);
-
+              const mapped = ACTION_MAP[entry.action] || { label: entry.action?.toUpperCase() || '?' };
+              const isInteraction = ['click', 'type', 'fill', 'handle_dialog'].includes(entry.action);
               return (
-                <div key={i} className="relative pb-1.5">
-                  {/* Timeline dot */}
-                  <div className={`absolute -left-10 top-2.5 w-[22px] h-[22px] rounded-full flex items-center justify-center z-10 ${
-                    isInteraction ? 'bg-white/[0.08] border border-white/[0.15]' :
-                    isNavigation ? 'bg-white/[0.06] border border-white/[0.10]' :
-                    'bg-white/[0.03] border border-white/[0.06]'
-                  }`}>
-                    <IconComponent className={`w-3 h-3 ${
-                      isInteraction ? 'text-white/50' :
-                      isNavigation ? 'text-white/40' :
-                      'text-white/20'
-                    }`} strokeWidth={2} />
-                  </div>
-
-                  {/* Step content */}
-                  <div className={`rounded-lg px-4 py-2 ${
-                    isInteraction ? 'glass' : 'bg-transparent'
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[9px] font-semibold uppercase tracking-wider w-16 flex-shrink-0 ${
-                        isInteraction ? 'text-white/30' :
-                        isNavigation ? 'text-white/25' :
-                        'text-white/15'
-                      }`}>
-                        {mapped.label}
-                      </span>
-                      <p className={`text-sm flex-1 ${
-                        isInteraction ? 'text-white/60' :
-                        'text-white/35'
-                      }`}>
-                        {entry.detail}
-                      </p>
-                      <span className="text-[8px] text-white/10 flex-shrink-0">{entry.step}</span>
-                    </div>
-                  </div>
+                <div key={i} className="flex gap-2 py-0.5">
+                  <span className="text-[#555] w-5 text-right flex-shrink-0">{entry.step}</span>
+                  <span className={`w-12 flex-shrink-0 ${isInteraction ? 'text-cyan' : 'text-dim'}`}>[{mapped.label}]</span>
+                  <span className={isInteraction ? 'text-white/70' : 'text-dim'}>{entry.detail}</span>
                 </div>
               );
             })}
-
-            {/* Done entry */}
-            {doneEntry && (
-              <div className="relative pb-1.5">
-                <div className="absolute -left-10 top-2.5 w-[22px] h-[22px] rounded-full flex items-center justify-center z-10 bg-white/[0.06] border border-white/[0.10]">
-                  <CheckCircle2 className="w-3 h-3 text-white/40" strokeWidth={2} />
-                </div>
-                <div className="rounded-lg px-4 py-2 bg-white/[0.02] border border-white/[0.04]">
-                  <p className="text-sm text-white/40">{doneEntry.detail}</p>
-                </div>
-              </div>
-            )}
+            <div className="flex gap-2 py-0.5 text-cyan">
+              <span className="text-[#555] w-5 text-right flex-shrink-0">*</span>
+              <span>[DONE]</span>
+              <span>Simulation complete — {findings.length} vulnerability(s) detected.</span>
+            </div>
           </div>
         )}
       </div>

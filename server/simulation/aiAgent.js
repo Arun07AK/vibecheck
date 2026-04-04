@@ -153,10 +153,11 @@ async function runMCPSimulation(baseUrl) {
   let transport = null;
 
   try {
-    // Spawn Playwright MCP server
+    // Spawn Playwright MCP server (local binary, no npx overhead)
+    const mcpBin = path.join(__dirname, '..', 'node_modules', '.bin', 'playwright-mcp');
     transport = new StdioClientTransport({
-      command: 'npx',
-      args: ['@playwright/mcp@latest', '--headless'],
+      command: mcpBin,
+      args: ['--headless'],
     });
 
     mcpClient = new MCPClient({ name: 'vibecheck', version: '1.0.0' });
@@ -359,7 +360,11 @@ async function simulate(repoPath) {
 
     if (canMCP) {
       try {
-        const mcpLog = await runMCPSimulation(baseUrl);
+        // 5 min timeout — generous for MCP agentic loop (up to 15 Claude turns)
+        const mcpLog = await Promise.race([
+          runMCPSimulation(baseUrl),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('MCP timeout')), 300000)),
+        ]);
         log.push(...mcpLog);
 
         // Extract findings from log
