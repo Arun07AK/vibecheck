@@ -1,5 +1,137 @@
 import { Compass, Search, Keyboard, MousePointer, AlertTriangle, CheckCircle2, XCircle, Bot, Eye, Terminal, Globe, MessageSquare, Layers, X, ShieldAlert, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const NODE_COLORS = {
+  navigate: '#7B61FF', snapshot: '#555', click: '#FFB84D', type: '#FFB84D',
+  fill: '#FFB84D', evaluate: '#2BB6FF', console_messages: '#555',
+  handle_dialog: '#FF4ECD', finding: '#FF4ECD', done: '#00E5C0', error: '#FF3B30',
+  inspect: '#888', tabs: '#555', close: '#555',
+};
+
+function AttackGraph({ log }) {
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  // Filter to meaningful actions only
+  const nodes = log
+    .filter(e => e.action !== 'done' && e.detail)
+    .map((e, i) => ({
+      id: i,
+      action: e.action,
+      label: (ACTION_MAP[e.action]?.label || e.action?.toUpperCase() || '?').slice(0, 5),
+      detail: e.detail?.slice(0, 40) || '',
+      isFinding: !!e.finding,
+      color: e.finding ? '#FF4ECD' : (NODE_COLORS[e.action] || '#555'),
+    }));
+
+  // Animate nodes appearing
+  useEffect(() => {
+    if (visibleCount >= nodes.length) return;
+    const t = setTimeout(() => setVisibleCount(c => c + 1), 150);
+    return () => clearTimeout(t);
+  }, [visibleCount, nodes.length]);
+
+  // Layout: center + circular
+  const cx = 300, cy = 160, radius = 120;
+  const positions = nodes.map((_, i) => {
+    const angle = (i / Math.max(nodes.length, 1)) * Math.PI * 2 - Math.PI / 2;
+    const r = radius + (i % 3) * 15; // slight variation
+    return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+  });
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-xl" style={{ height: '340px', background: 'radial-gradient(ellipse at center, rgba(0,240,255,0.03) 0%, transparent 70%)' }}>
+      <svg width="100%" height="340" viewBox="0 0 600 340">
+        {/* Background grid dots */}
+        {Array.from({ length: 20 }).map((_, i) =>
+          Array.from({ length: 10 }).map((_, j) => (
+            <circle key={`g-${i}-${j}`} cx={30 * i + 15} cy={34 * j + 5} r="0.5" fill="#333" />
+          ))
+        )}
+
+        {/* Edges — animated dashed lines */}
+        {nodes.map((node, i) => {
+          if (i >= visibleCount || i === 0) return null;
+          const from = i === 1 ? { x: cx, y: cy } : positions[i - 1];
+          const to = positions[i];
+          return (
+            <line key={`e-${i}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+              stroke={node.isFinding ? '#FF4ECD' : '#00F0FF'} strokeWidth="1" opacity="0.3"
+              strokeDasharray="4 4"
+              style={{ transition: 'all 0.5s ease' }}>
+              <animate attributeName="stroke-dashoffset" values="0;-8" dur="1.5s" repeatCount="indefinite" />
+            </line>
+          );
+        })}
+
+        {/* Center "App" node */}
+        <circle cx={cx} cy={cy} r="22" fill="rgba(0,240,255,0.08)" stroke="#00F0FF" strokeWidth="1.5">
+          <animate attributeName="r" values="22;24;22" dur="3s" repeatCount="indefinite" />
+        </circle>
+        <circle cx={cx} cy={cy} r="14" fill="rgba(0,240,255,0.15)" />
+        <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle"
+          className="fill-cyan text-[9px] font-mono font-bold">APP</text>
+
+        {/* Connection lines from center to first ring */}
+        {nodes.slice(0, Math.min(visibleCount, 6)).map((_, i) => (
+          <line key={`c-${i}`} x1={cx} y1={cy} x2={positions[i]?.x} y2={positions[i]?.y}
+            stroke="#00F0FF" strokeWidth="0.5" opacity="0.1" />
+        ))}
+
+        {/* Action nodes */}
+        {nodes.map((node, i) => {
+          if (i >= visibleCount) return null;
+          const pos = positions[i];
+          const r = node.isFinding ? 16 : 10;
+
+          return (
+            <g key={`n-${i}`} style={{ transition: 'opacity 0.4s ease', opacity: 1 }}>
+              {/* Glow for findings */}
+              {node.isFinding && (
+                <circle cx={pos.x} cy={pos.y} r={r + 8} fill="none" stroke="#FF4ECD" strokeWidth="1" opacity="0.2">
+                  <animate attributeName="r" values={`${r + 6};${r + 12};${r + 6}`} dur="2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite" />
+                </circle>
+              )}
+
+              {/* Node circle */}
+              <circle cx={pos.x} cy={pos.y} r={r}
+                fill={node.isFinding ? 'rgba(255,78,205,0.15)' : 'rgba(14,14,20,0.9)'}
+                stroke={node.color} strokeWidth={node.isFinding ? 2 : 1} />
+
+              {/* Label */}
+              <text x={pos.x} y={pos.y + 1} textAnchor="middle" dominantBaseline="middle"
+                fontSize={node.isFinding ? 7 : 6} fontFamily="JetBrains Mono, monospace" fontWeight="600"
+                fill={node.color}>
+                {node.label}
+              </text>
+
+              {/* Detail below */}
+              <text x={pos.x} y={pos.y + r + 10} textAnchor="middle"
+                fontSize="5" fill="#555" fontFamily="JetBrains Mono, monospace">
+                {node.detail}
+              </text>
+
+              {/* Floating animation */}
+              <animateTransform attributeName="transform" type="translate"
+                values={`0,0; 0,${node.isFinding ? -3 : -1.5}; 0,0`}
+                dur={`${2.5 + (i % 3) * 0.5}s`} repeatCount="indefinite" />
+            </g>
+          );
+        })}
+
+        {/* Legend */}
+        <g transform="translate(10, 310)">
+          {[['Action', '#00F0FF'], ['Interaction', '#FFB84D'], ['Analysis', '#2BB6FF'], ['Vulnerability', '#FF4ECD']].map(([label, color], i) => (
+            <g key={label} transform={`translate(${i * 140}, 0)`}>
+              <circle cx="4" cy="4" r="3" fill={color} opacity="0.6" />
+              <text x="12" y="7" fontSize="7" fill="#555" fontFamily="JetBrains Mono, monospace">{label}</text>
+            </g>
+          ))}
+        </g>
+      </svg>
+    </div>
+  );
+}
 
 const ACTION_MAP = {
   navigate: { Icon: Globe, label: 'NAV' }, snapshot: { Icon: Eye, label: 'SNAP' },
@@ -48,6 +180,9 @@ function SimulationResults({ simulation }) {
           AI launched a headless browser, navigated the target app, injected attack payloads, and verified vulnerabilities in real-time.
         </div>
       </div>
+
+      {/* Attack Surface Graph */}
+      <AttackGraph log={log} />
 
       {/* Breakpoints */}
       <div className="space-y-2">
