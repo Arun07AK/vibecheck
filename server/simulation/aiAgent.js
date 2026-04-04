@@ -251,9 +251,9 @@ When done testing, respond with a text summary of your findings (no tool call).`
                 finding: { severity: 'HIGH', title: 'Runtime Console Errors' } });
             }
 
-            // Check for alert dialogs (XSS confirmation)
-            if (resultText.includes('alert') || resultText.includes('dialog')) {
-              log.push({ step: stepNum, action: 'finding', detail: 'Browser dialog/alert triggered — possible XSS confirmation',
+            // Check for actual alert dialogs (Playwright MCP reports these as "[Page] Dialog appeared")
+            if (resultText.includes('Dialog appeared') || resultText.includes('dialog was dismissed')) {
+              log.push({ step: stepNum, action: 'finding', detail: 'Browser alert dialog triggered — XSS payload executed',
                 finding: { severity: 'CRITICAL', title: 'XSS Confirmed — Dialog Triggered' } });
             }
 
