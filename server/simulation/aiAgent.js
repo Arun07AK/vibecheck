@@ -191,14 +191,14 @@ async function runAISimulation(page, baseUrl) {
 
   for (let step = 2; step <= 5; step++) {
     try {
-      const screenshot = await page.screenshot({ encoding: 'base64', fullPage: true });
+      const screenshot = await page.screenshot({ encoding: 'base64', fullPage: false, timeout: 15000 });
       const currentUrl = page.url();
       const historyStr = pastActions.length > 0
         ? `\n\nACTIONS ALREADY TAKEN (do NOT repeat these):\n${pastActions.map((a, i) => `${i + 1}. ${a}`).join('\n')}`
         : '';
 
       const response = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-6',
         max_tokens: 500,
         messages: [{
           role: 'user',
@@ -299,8 +299,18 @@ async function simulate(repoPath) {
     const baseUrl = `http://localhost:${app.port}`;
 
     // Launch browser
-    browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    browser = await puppeteer.launch({ headless: 'new', protocolTimeout: 120000, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
+
+    // Auto-dismiss any alert/confirm/prompt dialogs (XSS payloads trigger these)
+    page.on('dialog', async (dialog) => {
+      log.push({
+        step: log.length + 1, action: 'finding',
+        detail: `JavaScript alert() triggered: "${dialog.message()}" — XSS payload executed successfully`,
+        finding: { severity: 'CRITICAL', title: 'XSS Confirmed — alert() Executed' },
+      });
+      await dialog.dismiss();
+    });
 
     // Collect console errors (deduplicated)
     const consoleErrorSet = new Set();
@@ -328,9 +338,8 @@ async function simulate(repoPath) {
     }
 
     // Run simulation
-    // Scripted mode is faster and more reliable for demos
-    // AI mode only if explicitly requested via env var
-    const useAI = process.env.VIBECHECK_AI_SIM === 'true' && process.env.ANTHROPIC_API_KEY && Anthropic;
+    // AI mode uses Claude Sonnet to guide the simulation
+    const useAI = process.env.ANTHROPIC_API_KEY && Anthropic;
     const simLog = useAI
       ? await runAISimulation(page, baseUrl)
       : await runScriptedSimulation(page, baseUrl);
