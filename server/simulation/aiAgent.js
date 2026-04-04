@@ -187,7 +187,14 @@ TESTING PLAN:
 
 After each action, use browser_snapshot to observe the result.
 Be aggressive. Try different payloads. Report every vulnerability you find.
-When done testing, respond with a text summary of your findings (no tool call).`;
+
+IMPORTANT: In your final text response (when you stop calling tools), explicitly list every vulnerability:
+- If an alert() dialog appeared or you had to handle a dialog, that confirms XSS — report as CRITICAL
+- If you found exposed API endpoints without auth, report as HIGH
+- If you found runtime errors in console, report as HIGH
+- Format each finding as: [SEVERITY] Title — Description
+- If you found NO vulnerabilities, say "No vulnerabilities detected"`;
+
 
     let messages = [{ role: 'user', content: systemPrompt }];
     let stepNum = 2;
@@ -211,12 +218,25 @@ When done testing, respond with a text summary of your findings (no tool call).`
           const summary = textBlock.text;
           log.push({ step: stepNum, action: 'done', detail: summary.slice(0, 300), finding: null });
 
-          // Check for XSS/vulnerability mentions in summary
-          if (summary.toLowerCase().includes('xss') && (summary.toLowerCase().includes('confirmed') || summary.toLowerCase().includes('vulnerable') || summary.toLowerCase().includes('reflected'))) {
-            log.push({ step: stepNum, action: 'finding', detail: 'AI confirmed XSS vulnerability during testing', finding: { severity: 'CRITICAL', title: 'XSS Vulnerability Confirmed by AI' } });
+          // Parse structured findings from Claude's summary (e.g. "[CRITICAL] XSS — payload reflected")
+          const findingRegex = /\[(CRITICAL|HIGH|MEDIUM|LOW)\]\s*(.+?)(?:\n|$)/gi;
+          let match;
+          while ((match = findingRegex.exec(summary)) !== null) {
+            log.push({ step: stepNum, action: 'finding', detail: match[2].trim(),
+              finding: { severity: match[1].toUpperCase(), title: match[2].trim().slice(0, 80) } });
           }
-          if (summary.toLowerCase().includes('sql injection') && (summary.toLowerCase().includes('confirmed') || summary.toLowerCase().includes('vulnerable'))) {
-            log.push({ step: stepNum, action: 'finding', detail: 'AI confirmed SQL injection vulnerability', finding: { severity: 'CRITICAL', title: 'SQL Injection Confirmed by AI' } });
+
+          // Fallback: check for keyword-based vulnerability mentions
+          const lower = summary.toLowerCase();
+          if (lower.includes('xss') && (lower.includes('confirmed') || lower.includes('vulnerable') || lower.includes('reflected') || lower.includes('executed'))) {
+            if (!log.some(e => e.finding?.title?.includes('XSS'))) {
+              log.push({ step: stepNum, action: 'finding', detail: 'AI confirmed XSS vulnerability', finding: { severity: 'CRITICAL', title: 'XSS Vulnerability Confirmed by AI' } });
+            }
+          }
+          if (lower.includes('exposed') && lower.includes('api')) {
+            if (!log.some(e => e.finding?.title?.includes('API'))) {
+              log.push({ step: stepNum, action: 'finding', detail: 'Exposed API endpoint without authentication', finding: { severity: 'HIGH', title: 'Exposed API Endpoint' } });
+            }
           }
         }
         break;
@@ -238,7 +258,10 @@ When done testing, respond with a text summary of your findings (no tool call).`
           else if (toolName === 'browser_console_messages') detail = 'Reading console messages';
           else detail = `${toolName}(${JSON.stringify(toolInput).slice(0, 80)})`;
 
-          log.push({ step: stepNum++, action: toolName.replace('browser_', ''), detail, finding: null });
+          // browser_handle_dialog = Claude dismissing a dialog = XSS payload executed
+          const isFinding = toolName === 'browser_handle_dialog';
+          log.push({ step: stepNum++, action: toolName.replace('browser_', ''), detail: isFinding ? 'Browser dialog appeared — XSS payload executed successfully' : detail,
+            finding: isFinding ? { severity: 'CRITICAL', title: 'XSS Confirmed — Browser Dialog Triggered' } : null });
 
           // Execute tool via MCP
           try {
