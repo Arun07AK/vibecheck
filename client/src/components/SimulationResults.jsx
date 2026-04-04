@@ -19,10 +19,11 @@ const ACTION_MAP = {
 };
 
 function SimulationResults({ simulation }) {
+  const [showActions, setShowActions] = useState(true);
+
   if (!simulation) return null;
   const { log, mode, issueCount } = simulation;
   if (!log || log.length === 0) return null;
-  const [showActions, setShowActions] = useState(true);
 
   const modeLabel = mode === 'mcp' ? 'MCP (Playwright + Claude Sonnet 4.6)' : mode === 'ai-guided' ? 'AI-Guided (Claude Sonnet 4.6)' : mode === 'scripted' ? 'Scripted Tests' : 'Failed';
 
