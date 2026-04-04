@@ -311,7 +311,7 @@ IMPORTANT: In your final text response (when you stop calling tools), explicitly
         const errorLines = consoleText.split('\n').filter(l => l.toLowerCase().includes('error') || l.toLowerCase().includes('undefined') || l.toLowerCase().includes('uncaught'));
         const uniqueErrors = [...new Set(errorLines)];
         for (const err of uniqueErrors.slice(0, 5)) {
-          if (err.includes('favicon') || err.includes('manifest') || err.includes('404') || err.includes('Failed to load resource') || err.includes('Total messages:')) continue;
+          if (err.includes('favicon') || err.includes('manifest') || err.includes('404') || err.includes('Failed to load resource') || err.includes('Total messages') || err.includes('Errors:') && err.includes('Warnings:')) continue;
           log.push({ step: log.length + 1, action: 'finding', detail: `Runtime error: ${err.trim().slice(0, 200)}`,
             finding: { severity: 'HIGH', title: 'Runtime Error Caught' } });
         }
