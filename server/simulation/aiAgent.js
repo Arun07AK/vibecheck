@@ -301,6 +301,40 @@ IMPORTANT: In your final text response (when you stop calling tools), explicitly
       }
     }
 
+    // === Post-loop verification: explicitly check for issues ===
+    try {
+      // 1. Check console messages for runtime errors
+      const consoleResult = await mcpClient.callTool({ name: 'browser_console_messages', arguments: {} });
+      const consoleText = (consoleResult.content || []).map(c => c.text || '').join('\n');
+      if (consoleText.trim()) {
+        const errorLines = consoleText.split('\n').filter(l => l.toLowerCase().includes('error') || l.toLowerCase().includes('undefined') || l.toLowerCase().includes('uncaught'));
+        const uniqueErrors = [...new Set(errorLines)];
+        for (const err of uniqueErrors.slice(0, 5)) {
+          if (err.includes('favicon') || err.includes('manifest')) continue;
+          log.push({ step: log.length + 1, action: 'finding', detail: `Runtime error: ${err.trim().slice(0, 200)}`,
+            finding: { severity: 'HIGH', title: 'Runtime Error Caught' } });
+        }
+      }
+
+      // 2. Check DOM for unescaped XSS payloads
+      const domResult = await mcpClient.callTool({ name: 'browser_evaluate', arguments: {
+        function: "() => { const html = document.body.innerHTML; const xss = ['<script>alert', '<img src=x onerror', 'onerror=alert']; return xss.filter(p => html.includes(p)).join(', '); }"
+      }});
+      const xssFound = (domResult.content || []).map(c => c.text || '').join('');
+      if (xssFound.trim()) {
+        log.push({ step: log.length + 1, action: 'finding', detail: `XSS payload found unescaped in DOM: ${xssFound}`,
+          finding: { severity: 'CRITICAL', title: 'XSS Confirmed — Payload in DOM' } });
+      }
+
+      // 3. Navigate back and check for exposed API
+      const apiResult = await mcpClient.callTool({ name: 'browser_navigate', arguments: { url: baseUrl + '/api/todos' } });
+      const apiText = (apiResult.content || []).map(c => c.text || '').join('');
+      if (apiText.includes('[') || apiText.includes('{')) {
+        log.push({ step: log.length + 1, action: 'finding', detail: 'API endpoint /api/todos returns data without authentication',
+          finding: { severity: 'HIGH', title: 'Exposed API — No Authentication' } });
+      }
+    } catch {}
+
     return log;
   } finally {
     if (mcpClient) try { await mcpClient.close(); } catch {}
