@@ -364,6 +364,7 @@ async function simulate(repoPath) {
     for (const err of consoleErrorSet) {
       // Skip noisy browser resource errors
       if (err.includes('favicon.ico') || err.includes('manifest.json')) continue;
+      if (err.includes('Failed to load resource') && err.includes('404')) continue;
       issues.push({
         scanner: 'simulation',
         severity: 'HIGH',

@@ -26,7 +26,7 @@ function SimulationResults({ simulation }) {
   const { log, mode, issueCount } = simulation;
   if (!log || log.length === 0) return null;
 
-  const modeLabel = mode === 'ai-guided' ? 'AI-Guided (Claude Haiku)' : mode === 'scripted' ? 'Scripted Tests' : 'Failed';
+  const modeLabel = mode === 'ai-guided' ? 'AI-Guided (Claude Sonnet 4.6)' : mode === 'scripted' ? 'Scripted Tests' : 'Failed';
   const modeColor = mode === 'ai-guided' ? 'text-teal' : mode === 'scripted' ? 'text-yellow-400' : 'text-red-400';
 
   return (
