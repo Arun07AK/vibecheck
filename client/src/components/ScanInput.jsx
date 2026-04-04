@@ -20,11 +20,13 @@ function ScanInput({ onScan }) {
   return (
     <div className="max-w-2xl mx-auto py-16 fade-in">
       <div className="text-center mb-10">
-        <h2 className="text-4xl font-bold text-white mb-3">
-          Audit Your Vibe-Coded App
+        <div className="text-6xl mb-4">🔍</div>
+        <h2 className="text-5xl font-black text-white mb-4 tracking-tight leading-tight">
+          Audit Your<br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal to-cyan-400">Vibe-Coded App</span>
         </h2>
-        <p className="text-slate-400 text-lg">
-          Paste a GitHub URL or local path. We'll scan for secrets, vulnerabilities,
+        <p className="text-slate-400 text-lg max-w-md mx-auto">
+          Paste a GitHub URL or local path. We scan for secrets, vulnerabilities,
           PII leaks, and code smells — then score it 0-100.
         </p>
       </div>

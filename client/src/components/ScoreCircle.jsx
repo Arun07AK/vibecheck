@@ -52,17 +52,17 @@ function ScoreCircle({ score, verdict, verdictColor }) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative">
-        <svg width="200" height="200" className="-rotate-90">
+      <div className="relative" style={{ filter: `drop-shadow(0 0 15px ${colors.stroke}30)` }}>
+        <svg width="220" height="220" className="-rotate-90">
           <circle
-            cx="100" cy="100" r={radius}
-            fill="none" stroke="#1e293b" strokeWidth="12"
+            cx="110" cy="110" r={radius}
+            fill="none" stroke="#1e293b" strokeWidth="14"
           />
           <circle
-            cx="100" cy="100" r={radius}
+            cx="110" cy="110" r={radius}
             fill="none"
             stroke={colors.stroke}
-            strokeWidth="12"
+            strokeWidth="14"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
@@ -70,27 +70,23 @@ function ScoreCircle({ score, verdict, verdictColor }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-5xl font-bold text-white">{displayScore}</span>
-          <span className="text-sm text-slate-400">/100</span>
+          <span className="text-6xl font-black text-white">{displayScore}</span>
+          <span className="text-sm text-slate-400 font-medium">/100</span>
         </div>
       </div>
 
       {/* Letter Grade */}
       {showGrade && (
         <div
-          className={`mt-3 text-6xl font-black ${colors.text}`}
-          style={{
-            transform: `scale(${gradeScale})`,
-            transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            textShadow: `0 0 40px ${colors.stroke}40`,
-          }}
+          className={`mt-3 text-7xl font-black grade-pop ${colors.text}`}
+          style={{ textShadow: `0 0 50px ${colors.stroke}50` }}
         >
           {grade}
         </div>
       )}
 
       <div
-        className={`mt-2 px-6 py-2 rounded-full font-bold text-lg ${colors.text}`}
+        className={`mt-3 px-8 py-2.5 rounded-full font-extrabold text-xl tracking-wider ${colors.text}`}
         style={{ background: colors.bg }}
       >
         {verdict}

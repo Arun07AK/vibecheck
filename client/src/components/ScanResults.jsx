@@ -87,7 +87,7 @@ function ScanResults({ data, onReset }) {
     <div className="fade-in space-y-8">
       {/* Score + Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-surface rounded-2xl p-8 flex flex-col items-center justify-center">
+        <div className="bg-surface rounded-2xl p-8 flex flex-col items-center justify-center card-hover">
           <ScoreCircle
             score={data.score}
             verdict={data.verdict}
@@ -95,14 +95,14 @@ function ScanResults({ data, onReset }) {
           />
         </div>
 
-        <div className="bg-surface rounded-2xl p-6 space-y-4">
+        <div className="bg-surface rounded-2xl p-6 space-y-4 card-hover">
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Severity Breakdown</h3>
           <div className="w-48 mx-auto">
             <Pie data={severityChartData} options={chartOptions} />
           </div>
         </div>
 
-        <div className="bg-surface rounded-2xl p-6 space-y-4">
+        <div className="bg-surface rounded-2xl p-6 space-y-4 card-hover">
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Scanner Breakdown</h3>
           <Bar data={scannerChartData} options={barOptions} />
         </div>

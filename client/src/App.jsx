@@ -70,15 +70,18 @@ function App() {
   return (
     <div className="min-h-screen bg-bg">
       {/* Header */}
-      <header className="border-b border-slate-700/50 px-6 py-4">
+      <header className="border-b border-slate-700/50 px-6 py-4 backdrop-blur-sm bg-bg/80 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-teal/20 rounded-xl flex items-center justify-center text-teal font-bold text-lg">
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={handleReset}
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-teal to-cyan-500 rounded-xl flex items-center justify-center text-bg font-black text-lg shadow-lg shadow-teal/20">
               VC
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">VibeCheck</h1>
-              <p className="text-xs text-slate-400">AI Code Auditor</p>
+              <h1 className="text-xl font-extrabold text-white tracking-tight">VibeCheck</h1>
+              <p className="text-[10px] text-slate-400 tracking-widest uppercase">AI Code Auditor</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
