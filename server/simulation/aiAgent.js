@@ -311,28 +311,22 @@ IMPORTANT: In your final text response (when you stop calling tools), explicitly
         const errorLines = consoleText.split('\n').filter(l => l.toLowerCase().includes('error') || l.toLowerCase().includes('undefined') || l.toLowerCase().includes('uncaught'));
         const uniqueErrors = [...new Set(errorLines)];
         for (const err of uniqueErrors.slice(0, 5)) {
-          if (err.includes('favicon') || err.includes('manifest')) continue;
+          if (err.includes('favicon') || err.includes('manifest') || err.includes('404') || err.includes('Failed to load resource') || err.includes('Total messages:')) continue;
           log.push({ step: log.length + 1, action: 'finding', detail: `Runtime error: ${err.trim().slice(0, 200)}`,
             finding: { severity: 'HIGH', title: 'Runtime Error Caught' } });
         }
       }
 
-      // 2. Check DOM for unescaped XSS payloads
+      // 2. Check DOM for ACTUAL unescaped XSS (not escaped HTML entities)
+      // Use textContent comparison — if the script tag renders as visible text, it's escaped (safe)
+      // If it's in innerHTML but NOT in textContent, it's unescaped (XSS)
       const domResult = await mcpClient.callTool({ name: 'browser_evaluate', arguments: {
-        function: "() => { const html = document.body.innerHTML; const xss = ['<script>alert', '<img src=x onerror', 'onerror=alert']; return xss.filter(p => html.includes(p)).join(', '); }"
+        function: "() => { const html = document.body.innerHTML; const text = document.body.textContent; const payloads = [\"<script>alert\", \"<img src=x onerror\"]; const unescaped = payloads.filter(p => html.includes(p) && !text.includes(p)); return unescaped.join(', '); }"
       }});
       const xssFound = (domResult.content || []).map(c => c.text || '').join('');
-      if (xssFound.trim()) {
-        log.push({ step: log.length + 1, action: 'finding', detail: `XSS payload found unescaped in DOM: ${xssFound}`,
+      if (xssFound.trim() && !xssFound.includes('Result') && xssFound.includes('<')) {
+        log.push({ step: log.length + 1, action: 'finding', detail: `XSS payload executed in DOM (not escaped): ${xssFound.slice(0, 100)}`,
           finding: { severity: 'CRITICAL', title: 'XSS Confirmed — Payload in DOM' } });
-      }
-
-      // 3. Navigate back and check for exposed API
-      const apiResult = await mcpClient.callTool({ name: 'browser_navigate', arguments: { url: baseUrl + '/api/todos' } });
-      const apiText = (apiResult.content || []).map(c => c.text || '').join('');
-      if (apiText.includes('[') || apiText.includes('{')) {
-        log.push({ step: log.length + 1, action: 'finding', detail: 'API endpoint /api/todos returns data without authentication',
-          finding: { severity: 'HIGH', title: 'Exposed API — No Authentication' } });
       }
     } catch {}
 
