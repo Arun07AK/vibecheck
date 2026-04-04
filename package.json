@@ -1,0 +1,13 @@
+{
+  "name": "vibecheck",
+  "version": "1.0.0",
+  "description": "AI-powered code auditor for vibe-coded repos",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && node index.js",
+    "client": "cd client && npx vite --port 5173"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
