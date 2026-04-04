@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Bot, Loader2 } from 'lucide-react';
 
 const DOMAIN_COLORS = {
   security: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400' },
@@ -32,7 +33,7 @@ function AgentCard({ agent }) {
       onClick={() => setExpanded(!expanded)}
     >
       <div className="px-5 py-4 flex items-center gap-3">
-        <span className="text-2xl">{agent.icon}</span>
+        <Bot className="w-5 h-5 text-slate-400" strokeWidth={1.5} />
         <div className="flex-1">
           <h3 className="text-white font-medium">{agent.name}</h3>
           <span className={`text-xs ${colors.text}`}>
@@ -102,7 +103,7 @@ function AgentResults({ agents, loading, onRun }) {
   if (!agents && !loading) {
     return (
       <div className="bg-surface rounded-2xl p-8 text-center">
-        <div className="text-4xl mb-4">&#129302;</div>
+        <Bot className="w-10 h-10 text-teal mx-auto mb-4" strokeWidth={1.5} />
         <h3 className="text-xl font-bold text-white mb-2">AI Agent Analysis</h3>
         <p className="text-slate-400 mb-6 text-sm">
           5 specialized AI agents will analyze your code and generate copy-paste fix prompts
@@ -121,7 +122,7 @@ function AgentResults({ agents, loading, onRun }) {
   if (loading) {
     return (
       <div className="bg-surface rounded-2xl p-8 text-center">
-        <div className="inline-block animate-spin text-4xl mb-4">&#9881;</div>
+        <Loader2 className="w-10 h-10 text-teal mx-auto mb-4 animate-spin" />
         <h3 className="text-xl font-bold text-white mb-2">Agents Analyzing...</h3>
         <p className="text-slate-400 text-sm">5 AI agents are reviewing your codebase</p>
       </div>

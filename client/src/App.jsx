@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ScanInput from './components/ScanInput';
 import ScanProgress from './components/ScanProgress';
 import ScanResults from './components/ScanResults';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import KnowledgeBase from './components/KnowledgeBase';
 
 function App() {
@@ -117,7 +118,7 @@ function App() {
         {state === 'kb' && <KnowledgeBase onBack={handleReset} />}
         {state === 'loading' && (
           <div className="text-center py-20 fade-in">
-            <div className="inline-block animate-spin text-4xl mb-4">&#9881;</div>
+            <Loader2 className="w-10 h-10 text-teal mx-auto mb-4 animate-spin" />
             <p className="text-slate-400">Loading report...</p>
           </div>
         )}
@@ -127,7 +128,7 @@ function App() {
         )}
         {state === 'error' && (
           <div className="text-center py-20 fade-in">
-            <div className="text-6xl mb-4">&#x26A0;</div>
+            <AlertTriangle className="w-14 h-14 text-red-400 mx-auto mb-4" strokeWidth={1.5} />
             <h2 className="text-2xl font-bold text-red-400 mb-2">Scan Failed</h2>
             <p className="text-slate-400 mb-6">{error}</p>
             <button

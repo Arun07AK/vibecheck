@@ -1,12 +1,14 @@
+import { Compass, Search, Keyboard, MousePointer, AlertTriangle, SkipForward, CheckCircle2, XCircle, Bot } from 'lucide-react';
+
 const ACTION_ICONS = {
-  navigate: '🧭',
-  inspect: '🔍',
-  type: '⌨️',
-  click: '👆',
-  finding: '🚨',
-  skip: '⏭️',
-  done: '✅',
-  error: '❌',
+  navigate: Compass,
+  inspect: Search,
+  type: Keyboard,
+  click: MousePointer,
+  finding: AlertTriangle,
+  skip: SkipForward,
+  done: CheckCircle2,
+  error: XCircle,
 };
 
 const ACTION_COLORS = {
@@ -33,7 +35,7 @@ function SimulationResults({ simulation }) {
     <div className="bg-surface rounded-2xl p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🤖</span>
+          <Bot className="w-6 h-6 text-teal" strokeWidth={1.5} />
           <div>
             <h3 className="text-white font-bold">AI Simulation</h3>
             <span className={`text-xs ${modeColor}`}>{modeLabel}</span>
@@ -49,23 +51,21 @@ function SimulationResults({ simulation }) {
 
       {/* Timeline */}
       <div className="relative pl-8 space-y-0">
-        {/* Vertical line */}
         <div className="absolute left-[15px] top-2 bottom-2 w-px bg-slate-700/50" />
 
         {log.map((entry, i) => {
-          const icon = ACTION_ICONS[entry.action] || '•';
+          const IconComponent = ACTION_ICONS[entry.action] || Search;
           const colorClass = ACTION_COLORS[entry.action] || ACTION_COLORS.inspect;
 
           return (
             <div key={i} className="relative pb-3">
-              {/* Dot on the line */}
               <div className="absolute -left-8 top-2 w-[11px] h-[11px] rounded-full bg-slate-700 border-2 border-slate-500 z-10"
                 style={entry.finding ? { backgroundColor: '#ef4444', borderColor: '#ef4444' } : undefined}
               />
 
               <div className={`border rounded-lg px-3 py-2 ${colorClass}`}>
                 <div className="flex items-start gap-2">
-                  <span className="text-sm flex-shrink-0">{icon}</span>
+                  <IconComponent className="w-4 h-4 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm ${entry.finding ? 'text-red-300 font-medium' : 'text-slate-300'}`}>
                       {entry.detail}

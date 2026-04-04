@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 
 function generateYAML(repoUrl) {
   const repoName = repoUrl.replace(/.*\//, '').replace('.git', '') || 'my-app';
@@ -118,7 +119,7 @@ function ProtectRepo({ repoUrl }) {
   return (
     <div className="bg-surface rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-3">
-        <span className="text-2xl">🛡️</span>
+        <ShieldCheck className="w-6 h-6 text-teal" strokeWidth={1.5} />
         <div className="flex-1">
           <h3 className="text-white font-bold">Protect This Repo</h3>
           <p className="text-xs text-slate-400">Add a GitHub Action that runs VibeCheck on every push — automatic security auditing</p>

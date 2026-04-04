@@ -1,83 +1,85 @@
+import { Lock, Skull, Flame, Syringe, FileWarning, EyeOff, Drama, Sparkles, Shield, Gem } from 'lucide-react';
+
 const BADGE_RULES = [
   {
     id: 'secret-keeper',
     name: 'Secret Keeper',
-    icon: '🤫',
+    Icon: Lock,
     description: 'Hardcoded secrets found in source code',
     check: (data) => data.scannerCounts.secrets > 0,
-    color: 'from-red-500/20 to-red-900/20 border-red-500/30',
+    color: 'from-red-500/20 to-red-900/20 border-red-500/30 text-red-400',
   },
   {
     id: 'eval-explorer',
     name: 'Eval Explorer',
-    icon: '💀',
-    description: 'eval() detected — the nuclear option of JavaScript',
+    Icon: Skull,
+    description: 'eval() detected — the nuclear option',
     check: (data) => data.issues.some(i => i.title === 'eval() Usage'),
-    color: 'from-red-500/20 to-orange-900/20 border-red-500/30',
+    color: 'from-red-500/20 to-orange-900/20 border-red-500/30 text-red-400',
   },
   {
     id: 'dependency-hell',
     name: 'Dependency Hell',
-    icon: '🔥',
-    description: 'Vulnerable or hallucinated dependencies found',
+    Icon: Flame,
+    description: 'Vulnerable or hallucinated dependencies',
     check: (data) => data.scannerCounts.dependencies > 0,
-    color: 'from-orange-500/20 to-red-900/20 border-orange-500/30',
+    color: 'from-orange-500/20 to-red-900/20 border-orange-500/30 text-orange-400',
   },
   {
     id: 'sql-survivor',
-    name: 'SQL Injection Survivor',
-    icon: '💉',
+    name: 'SQL Injection',
+    Icon: Syringe,
     description: 'SQL injection risk detected',
     check: (data) => data.issues.some(i => i.title === 'SQL Injection Risk'),
-    color: 'from-purple-500/20 to-red-900/20 border-purple-500/30',
+    color: 'from-purple-500/20 to-red-900/20 border-purple-500/30 text-purple-400',
   },
   {
     id: 'pii-leaker',
     name: 'PII Leaker',
-    icon: '📋',
+    Icon: FileWarning,
     description: 'Personal data exposed in source code',
     check: (data) => data.scannerCounts.pii > 0,
-    color: 'from-yellow-500/20 to-orange-900/20 border-yellow-500/30',
+    color: 'from-yellow-500/20 to-orange-900/20 border-yellow-500/30 text-yellow-400',
   },
   {
     id: 'silent-catcher',
     name: 'Silent Catcher',
-    icon: '🙈',
+    Icon: EyeOff,
     description: 'Empty catch blocks swallowing errors',
     check: (data) => data.issues.some(i => i.title === 'Empty Catch Block'),
-    color: 'from-yellow-500/20 to-yellow-900/20 border-yellow-500/30',
+    color: 'from-yellow-500/20 to-yellow-900/20 border-yellow-500/30 text-yellow-400',
   },
   {
     id: 'xss-artist',
-    name: 'XSS Artist',
-    icon: '🎭',
+    name: 'XSS Risk',
+    Icon: Drama,
     description: 'innerHTML or document.write without sanitization',
     check: (data) => data.issues.some(i => i.title.includes('innerHTML') || i.title.includes('document.write')),
-    color: 'from-pink-500/20 to-purple-900/20 border-pink-500/30',
+    color: 'from-pink-500/20 to-purple-900/20 border-pink-500/30 text-pink-400',
   },
   {
     id: 'clean-room',
     name: 'Clean Room',
-    icon: '✨',
-    description: 'Zero critical or high severity issues — impressive!',
+    Icon: Sparkles,
+    description: 'Zero critical or high severity issues',
     check: (data) => data.severityCounts.CRITICAL === 0 && data.severityCounts.HIGH === 0,
-    color: 'from-green-500/20 to-teal-900/20 border-green-500/30',
+    color: 'from-green-500/20 to-teal-900/20 border-green-500/30 text-green-400',
   },
   {
     id: 'fortress',
     name: 'Fort Knox',
-    icon: '🏰',
-    description: 'No secrets leaked — your vault is sealed',
+    Icon: Shield,
+    description: 'No secrets leaked — vault is sealed',
     check: (data) => data.scannerCounts.secrets === 0,
-    color: 'from-green-500/20 to-emerald-900/20 border-green-500/30',
+    color: 'from-green-500/20 to-emerald-900/20 border-green-500/30 text-green-400',
   },
   {
     id: 'perfect-score',
     name: 'Flawless',
-    icon: '💎',
-    description: 'Score 95+ — this code is production-ready',
+    Icon: Gem,
+    description: 'Score 95+ — production-ready',
     check: (data) => data.score >= 95,
-    color: 'from-cyan-500/20 to-blue-900/20 border-cyan-500/30',
+    color: 'from-cyan-500/20 to-blue-900/20 border-cyan-500/30 text-cyan-400',
   },
 ];
 
@@ -95,7 +97,7 @@ function Badges({ data }) {
             key={badge.id}
             className={`bg-gradient-to-br ${badge.color} border rounded-xl p-3 text-center transition-transform hover:scale-105`}
           >
-            <div className="text-3xl mb-1">{badge.icon}</div>
+            <badge.Icon className="w-6 h-6 mx-auto mb-1.5" strokeWidth={1.5} />
             <div className="text-xs font-bold text-white">{badge.name}</div>
             <div className="text-[10px] text-slate-400 mt-1">{badge.description}</div>
           </div>

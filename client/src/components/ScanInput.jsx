@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ScanSearch } from 'lucide-react';
 
 function ScanInput({ onScan }) {
   const [mode, setMode] = useState('url'); // url | local
@@ -20,7 +21,7 @@ function ScanInput({ onScan }) {
   return (
     <div className="max-w-2xl mx-auto py-16 fade-in">
       <div className="text-center mb-10">
-        <div className="text-6xl mb-4">🔍</div>
+        <ScanSearch className="w-14 h-14 text-teal mx-auto mb-4" strokeWidth={1.5} />
         <h2 className="text-5xl font-black text-white mb-4 tracking-tight leading-tight">
           Audit Your<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal to-cyan-400">Vibe-Coded App</span>
