@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Bot } from 'lucide-react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import ScoreCircle from './ScoreCircle';
@@ -111,7 +112,22 @@ function ScanResults({ data, onReset }) {
         </div>
       </div>
 
-      {data.simulation && <SimulationResults simulation={data.simulation} />}
+      {/* AI Simulation */}
+      {data.simulation ? (
+        <SimulationResults simulation={data.simulation} />
+      ) : (
+        data.issues.some(i => i.scanner === 'simulation') && (
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-center gap-3">
+              <Bot className="w-5 h-5 text-white/40" strokeWidth={1.5} />
+              <div>
+                <h3 className="text-white font-semibold">AI Simulation</h3>
+                <span className="text-xs text-white/30">Simulation ran but detailed log not available for saved reports</span>
+              </div>
+            </div>
+          </div>
+        )
+      )}
 
       <CodeHeatmap scanId={data.scanId} />
 
