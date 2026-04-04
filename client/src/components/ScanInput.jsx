@@ -67,7 +67,7 @@ function ScanInput({ onScan }) {
             <div className={`w-4 h-4 rounded-full absolute top-1 transition-transform ${enableSimulation ? 'translate-x-5 bg-black' : 'translate-x-1 bg-white/40'}`} />
           </div>
           <input type="checkbox" checked={enableSimulation} onChange={(e) => setEnableSimulation(e.target.checked)} className="sr-only" />
-          <span className="text-sm">Enable AI Simulation (Puppeteer + Claude)</span>
+          <span className="text-sm">Enable AI Simulation (Playwright MCP + Claude)</span>
         </label>
 
         <button
