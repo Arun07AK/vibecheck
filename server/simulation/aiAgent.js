@@ -1,3 +1,10 @@
+/**
+ * VibeCheck AI Simulation Engine
+ * Playwright MCP + Claude Sonnet 4.6 agentic loop for browser-based pen testing
+ *
+ * @author Arun AK <https://github.com/Arun07AK>
+ * @license MIT — Copyright (c) 2026 Arun AK
+ */
 const { spawn, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');

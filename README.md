@@ -1,8 +1,14 @@
 # VibeCheck
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Author: Arun AK](https://img.shields.io/badge/Author-Arun%20AK-00F0FF)](https://github.com/Arun07AK)
+[![Eclipse 6.0](https://img.shields.io/badge/Eclipse%206.0-Top%2027%2F258-FF4ECD)](https://github.com/Arun07AK/vibecheck)
+
 **AI-Powered Code Auditor for Vibe-Coded Apps**
 
 Scan. Simulate. Learn. Fix.
+
+> **Created and engineered by [Arun AK](https://github.com/Arun07AK)** — sole engineer of the technical product. Built end-to-end at Eclipse 6.0 (ACM Thapar, April 2026). See [CONTRIBUTORS.md](CONTRIBUTORS.md) for full team credits.
 
 VibeCheck is a security audit platform that scans AI-generated codebases for vulnerabilities, simulates real user attacks using an AI-driven browser, and generates actionable fix prompts.
 

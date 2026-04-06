@@ -1,3 +1,11 @@
+/**
+ * VibeCheck — AI-Powered Code Auditor
+ * Built at Eclipse 6.0 hackathon (ACM Thapar, April 2026)
+ *
+ * @author Arun AK <https://github.com/Arun07AK>
+ * @license MIT — Copyright (c) 2026 Arun AK
+ * @repo https://github.com/Arun07AK/vibecheck
+ */
 import { useState, useEffect, useRef } from 'react';
 import ScanInput from './components/ScanInput';
 import ScanProgress from './components/ScanProgress';
@@ -106,6 +114,19 @@ function App() {
           </div>
         )}
       </main>
+
+      <footer className="border-t border-border mt-16 py-6 px-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-[10px] text-dim">
+          <span>
+            Built by <a href="https://github.com/Arun07AK" target="_blank" rel="noopener noreferrer" className="text-cyan hover:underline">Arun AK</a>
+            <span className="text-[#444] mx-2">·</span>
+            Eclipse 6.0 (ACM Thapar)
+          </span>
+          <a href="https://github.com/Arun07AK/vibecheck" target="_blank" rel="noopener noreferrer" className="text-dim hover:text-cyan transition-colors">
+            github.com/Arun07AK/vibecheck
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,0 +1,28 @@
+VibeCheck — AI-Powered Code Auditor for Vibe-Coded Apps
+========================================================
+
+Copyright (c) 2026 Arun AK
+https://github.com/Arun07AK/vibecheck
+
+This software was created and engineered solely by Arun AK as the technical
+product author. Built end-to-end at the Eclipse 6.0 hackathon (ACM Thapar
+Student Chapter, April 2026).
+
+Components built by Arun AK:
+- Backend (Express server, routes, scoring engine, SQLite database)
+- 4 static scanners (secrets, dependencies, PII, code smells)
+- Playwright MCP integration and Claude Sonnet 4.6 agentic loop
+- 5 AI domain agents (Security, UX, Performance, Scalability, Production)
+- Knowledge base with frequency learning
+- Auto-generated GitHub Action CI/CD
+- Entire React frontend, all components, design system
+
+This project is licensed under the MIT License (see LICENSE file).
+
+Any redistribution, fork, or derivative work must:
+1. Retain this NOTICE file
+2. Retain the LICENSE file with the original copyright
+3. Clearly attribute the original author (Arun AK)
+4. Link back to the canonical repository: https://github.com/Arun07AK/vibecheck
+
+For team contributions, see CONTRIBUTORS.md.

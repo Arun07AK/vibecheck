@@ -1,3 +1,11 @@
+/**
+ * VibeCheck — AI-Powered Code Auditor for Vibe-Coded Apps
+ * Built at Eclipse 6.0 hackathon (ACM Thapar, April 2026)
+ *
+ * @author Arun AK <https://github.com/Arun07AK>
+ * @license MIT — Copyright (c) 2026 Arun AK
+ * @repo https://github.com/Arun07AK/vibecheck
+ */
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
