@@ -8,3 +8,4 @@ build/
 *.db-shm
 *.db-wal
 .playwright-mcp/
+pitch-prep.html
