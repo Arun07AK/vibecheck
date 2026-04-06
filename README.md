@@ -44,6 +44,8 @@ ANTHROPIC_API_KEY=your-key npm run dev
 # Backend: http://localhost:3001
 ```
 
+> **Note:** The AI Simulation and AI Agents features require your own Anthropic API key. The static scanners (secrets, dependencies, PII, code smells), scoring, and knowledge base work without it. Get a key at [console.anthropic.com](https://console.anthropic.com).
+
 ## API Endpoints
 
 | Endpoint | Method | Description |

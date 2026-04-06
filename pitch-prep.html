@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeCheck — Pitch Prep</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0A0A0F; color: #e5e7eb; min-height: 100vh; }
+  h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+  .header { text-align: center; margin-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 32px; }
+  .header h1 { font-size: 2.5rem; color: #fff; margin-bottom: 8px; }
+  .header h1 span { color: #00F0FF; }
+  .header p { color: #888; font-size: 14px; }
+  .header .badge { display: inline-block; background: rgba(0,240,255,0.1); color: #00F0FF; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 12px; border: 1px solid rgba(0,240,255,0.2); }
+  .tabs { display: flex; gap: 4px; margin-bottom: 32px; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap; }
+  .tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; color: #888; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.05em; min-width: 80px; }
+  .tab.active { background: #00F0FF; color: #0A0A0F; }
+  .tab:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.05); }
+  .section { display: none; }
+  .section.active { display: block; }
+  .card { background: rgba(14,14,20,0.72); border: 1px solid rgba(244,246,255,0.08); border-radius: 16px; padding: 24px; margin-bottom: 16px; backdrop-filter: blur(12px); }
+  .card h3 { color: #fff; margin-bottom: 12px; font-size: 18px; }
+  .card h4 { color: #00F0FF; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; }
+  .script-line { background: rgba(0,240,255,0.04); border-left: 3px solid #00F0FF; padding: 16px 20px; margin: 12px 0; border-radius: 0 12px 12px 0; font-size: 15px; line-height: 1.7; color: #e5e7eb; }
+  .script-line .speaker { color: #00F0FF; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .action { color: #888; font-style: italic; font-size: 13px; margin: 8px 0; padding: 8px 16px; border-left: 2px solid #333; }
+  .timer { display: inline-block; background: rgba(255,78,205,0.1); color: #FF4ECD; padding: 2px 10px; border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; }
+  .qa-table { width: 100%; border-collapse: collapse; }
+  .qa-table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; font-size: 14px; }
+  .qa-table td:first-child { color: #fff; font-weight: 600; width: 40%; }
+  .qa-table td:last-child { color: #aaa; }
+  .qa-table .who { color: #00F0FF; font-size: 11px; font-family: 'JetBrains Mono', monospace; display: block; margin-top: 4px; }
+  .checklist label { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin: 4px 0; border-radius: 8px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+  .checklist label:hover { background: rgba(255,255,255,0.03); }
+  .checklist input[type="checkbox"] { width: 18px; height: 18px; accent-color: #00F0FF; }
+  .checklist input:checked + span { color: #555; text-decoration: line-through; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+  .stat { text-align: center; padding: 16px; background: rgba(0,240,255,0.04); border: 1px solid rgba(0,240,255,0.1); border-radius: 12px; }
+  .stat .value { font-size: 24px; font-weight: 700; color: #00F0FF; font-family: 'JetBrains Mono', monospace; }
+  .stat .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+  .role-card { display: flex; gap: 16px; align-items: center; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 12px; margin: 8px 0; border: 1px solid rgba(255,255,255,0.04); }
+  .role-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #0A0A0F; flex-shrink: 0; }
+  .role-info .name { font-weight: 600; color: #fff; }
+  .role-info .desc { font-size: 13px; color: #888; margin-top: 2px; }
+  .emergency { background: rgba(255,59,48,0.05); border: 1px solid rgba(255,59,48,0.15); border-radius: 12px; padding: 16px; margin: 8px 0; }
+  .emergency .problem { color: #FF3B30; font-weight: 600; }
+  .emergency .solution { color: #aaa; margin-top: 4px; font-size: 13px; }
+  /* Tech section */
+  .tech-block { background: rgba(7,7,10,0.9); border: 1px solid rgba(0,240,255,0.1); border-radius: 12px; padding: 20px; margin: 12px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.8; color: #aaa; overflow-x: auto; }
+  .tech-block .comment { color: #555; }
+  .tech-block .keyword { color: #00F0FF; }
+  .tech-block .string { color: #FFB84D; }
+  .tech-block .fn { color: #FF4ECD; }
+  .tech-label { display: inline-block; background: rgba(123,97,255,0.1); color: #7B61FF; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; border: 1px solid rgba(123,97,255,0.2); }
+  .flow-step { display: flex; align-items: flex-start; gap: 12px; margin: 10px 0; }
+  .flow-num { width: 24px; height: 24px; border-radius: 6px; background: rgba(0,240,255,0.1); color: #00F0FF; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+  .flow-text { font-size: 13px; color: #ccc; line-height: 1.6; }
+  .flow-text strong { color: #00F0FF; }
+  .flow-text code { background: rgba(7,7,10,0.8); padding: 1px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #FFB84D; }
+  .hardest { background: rgba(255,78,205,0.05); border: 1px solid rgba(255,78,205,0.15); border-radius: 12px; padding: 20px; margin-top: 16px; }
+  .hardest h4 { color: #FF4ECD; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Vibe<span>Check</span></h1>
+    <p>Pitch Preparation Guide — Eclipse 6.0</p>
+    <div class="badge">TEAM PIPPED PIPERS</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('script')">Script</div>
+    <div class="tab" onclick="showTab('qa')">Q&A</div>
+    <div class="tab" onclick="showTab('tech')">Tech Deep-Dive</div>
+    <div class="tab" onclick="showTab('roles')">Roles</div>
+    <div class="tab" onclick="showTab('checklist')">Checklist</div>
+    <div class="tab" onclick="showTab('emergency')">Emergency</div>
+  </div>
+
+  <!-- SCRIPT TAB -->
+  <div id="script" class="section active">
+    <div class="stats-grid">
+      <div class="stat"><div class="value">24.7%</div><div class="label">AI code has flaws</div></div>
+      <div class="stat"><div class="value">19.7%</div><div class="label">Hallucinated pkgs</div></div>
+      <div class="stat"><div class="value">34</div><div class="label">Repos scanned</div></div>
+      <div class="stat"><div class="value">11.5K</div><div class="label">Issues found</div></div>
+    </div>
+
+    <div class="card">
+      <div class="timer">0:00 — 0:30</div>
+      <h3>Opening</h3>
+      <div class="script-line"><span class="speaker">Dev says:</span>Hey, we're Pipped Pipers. We built VibeCheck — an AI-powered code auditor for vibe-coded apps. Think of it as Lighthouse, but for security.</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>AI writes 80% of new code today, but 24.7% of it has security flaws. Cursor and Copilot let anyone build an app in minutes — but nobody's checking if that code is safe to ship. VibeCheck checks it.</div>
+    </div>
+
+    <div class="card">
+      <div class="timer">0:30 — 2:30</div>
+      <h3>Live Demo — Broken App</h3>
+      <div class="action">Paste broken app path, simulation ON, click Scan</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>Let me show you. Here's a real vibe-coded task manager. Four scanners run in parallel — secrets, dependencies, PII, code smells. Meanwhile, our AI simulation starts the app in a headless browser and tries to break it.</div>
+      <div class="action">Score reveals — point to grade and verdict</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>36 out of 100. F. NO-GO — Blocks Merge. It found a hardcoded API key, eval() in production, innerHTML XSS, and PII in console logs.</div>
+      <div class="action">Scroll to AI Simulation — point to breakpoints</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>Here's what makes us different. Claude Sonnet 4.6 opened this app in a real browser via Playwright MCP, typed an XSS payload, clicked Add, and — alert() actually fired. That's not a warning. That's a verified exploit. No human wrote these tests. The AI decided what to attack.</div>
+      <div class="action">Show the attack surface graph — nodes and connections</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>This graph shows the AI's attack path through the app. Each node is an action — navigate, type payload, click, evaluate DOM. The red nodes are where it found vulnerabilities.</div>
+    </div>
+
+    <div class="card">
+      <div class="timer">2:30 — 3:00</div>
+      <h3>Live Demo — Clean App</h3>
+      <div class="action">New Scan, scan /tmp/clean-vibe-app</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>Now a well-built app. 92. A minus. GO — Safe to Ship. Same attacks — nothing broke. The AI typed XSS, submitted it, checked the DOM — the app properly escapes everything.</div>
+    </div>
+
+    <div class="card">
+      <div class="timer">3:00 — 3:30</div>
+      <h3>AI Agents</h3>
+      <div class="action">Click Run AI Agents</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>We don't just find problems — we fix them. Five AI agents analyze the code: Security, UX, Performance, Scalability, Production Readiness. Each generates a copy-paste prompt for Cursor. AI auditing AI, then AI fixing AI.</div>
+    </div>
+
+    <div class="card">
+      <div class="timer">3:30 — 4:00</div>
+      <h3>Knowledge Base</h3>
+      <div class="action">Click Knowledge Base in header</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>Every scan makes VibeCheck smarter. 34 repos, 11,000 issues, 50 patterns. The number one AI mistake? Leaking email addresses — over 4,000 times. This isn't static. It learns.</div>
+    </div>
+
+    <div class="card">
+      <div class="timer">4:00 — 4:30</div>
+      <h3>GitHub Action</h3>
+      <div class="action">Click Get GitHub Action</div>
+      <div class="script-line"><span class="speaker">Dev says:</span>Drop this one file in your repo — every commit is automatically audited. Score below 40, CI fails. We tested it on a real repo. That push failed.</div>
+    </div>
+
+    <div class="card">
+      <div class="timer">4:30 — 5:00</div>
+      <h3>The Close</h3>
+      <div class="script-line"><span class="speaker">Dev says:</span>SonarQube scans code. Snyk scans code. We scan, simulate, learn, and generate the fix. <strong>VibeCheck. Lighthouse for vibe-coded apps.</strong></div>
+    </div>
+  </div>
+
+  <!-- Q&A TAB -->
+  <div id="qa" class="section">
+    <div class="card">
+      <h3>Jury Q&A — Under 30 seconds each</h3>
+      <table class="qa-table">
+        <tr><td>How is this different from SonarQube/Snyk?<span class="who">Dev answers</span></td><td>They do static analysis only. We also run the app with an AI agent that clicks, types, and tests like a real user. And we learn from every scan.</td></tr>
+        <tr><td>Does the AI simulation actually work?<span class="who">Arun answers</span></td><td>Yes — Claude Sonnet 4.6 via Playwright MCP gets 21 browser tools. It reads the accessibility tree, not screenshots. It typed XSS, clicked submit, and alert() fired. Happy to run it live.</td></tr>
+        <tr><td>What about false positives?<span class="who">Arun answers</span></td><td>For XSS we compare innerHTML vs textContent — only flag if the payload is actually unescaped and executable. Leaked API keys are high-confidence regex. We tested on clean apps — zero false positives.</td></tr>
+        <tr><td>Will this scale?<span class="who">Arun answers</span></td><td>Scanners run in parallel, under 5 seconds. For scale: worker queue for scans, hosted browser pool for simulation, distributed SQLite or Postgres for the knowledge base.</td></tr>
+        <tr><td>Why not just ESLint?<span class="who">Dev answers</span></td><td>ESLint catches style issues. We catch leaked Stripe keys, hallucinated npm packages that don't exist, PII exposure, and runtime crashes no linter finds.</td></tr>
+        <tr><td>Tech stack?<span class="who">Arun answers</span></td><td>React, Node, Express, Playwright MCP for browser control, Claude Sonnet 4.6 via Anthropic API for the agentic loop, SQLite with WAL mode, OSV.dev for real-time CVE data.</td></tr>
+        <tr><td>What's the knowledge base?<span class="who">Dev answers</span></td><td>Every scan upserts patterns with frequency tracking. After 34 scans we know the top 50 AI mistakes. High-frequency patterns get flagged with higher confidence in future scans.</td></tr>
+        <tr><td>How does the GitHub Action work?<span class="who">Arun answers</span></td><td>It clones our scanner repo on GitHub's Ubuntu runners, runs 4 scanners, prints score. Below 40, process.exit(1), CI fails. One YAML file.</td></tr>
+        <tr><td>What was the hardest challenge?<span class="who">Arun answers</span></td><td>Connecting Claude to the browser via MCP. We built a bridge: MCP tool schemas convert to Anthropic format, tool calls route to the MCP client, results feed back as tool_result messages. 15 turns of Claude driving a real browser.</td></tr>
+        <tr><td>Social impact?<span class="who">Dev answers</span></td><td>AI code is everywhere — startups, students, enterprises. VibeCheck ensures it doesn't ship with users' data exposed or security holes.</td></tr>
+        <tr><td>Don't know?<span class="who">Anyone</span></td><td>"Great question — we haven't explored that yet, but our hypothesis is..." Never bluff.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- TECH DEEP-DIVE TAB -->
+  <div id="tech" class="section">
+    <div class="card">
+      <h3>Architecture Overview</h3>
+      <p style="color:#888; font-size:13px; margin-bottom:16px;">Use this when judges ask "explain the technical architecture" or "how does X work under the hood"</p>
+
+      <h4>1. Static Analysis Pipeline</h4>
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">4 scanners run in <strong>Promise.all</strong> — truly parallel, not sequential. Each scans every file recursively, skipping <code>node_modules/.git/dist</code></div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Secret Scanner</strong> — 20 compiled regex patterns: AWS <code>AKIA[0-9A-Z]{16}</code>, Stripe <code>sk_live_</code>, JWT <code>eyJ...</code>, OpenAI <code>sk-</code>, database URLs, private keys</div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>Dependency Scanner</strong> — parses <code>package.json</code>, hits <strong>OSV.dev API</strong> in real-time for CVE data (GHSA IDs). Also checks against a list of 20+ known <strong>hallucinated npm packages</strong> that AI invents</div></div>
+      <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>PII Scanner</strong> — 6 patterns: email, phone, Aadhaar (India-specific), SSN, credit card, <code>console.log(password/secret)</code></div></div>
+      <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Code Smell Scanner</strong> — 10 patterns: <code>eval()</code>, empty catch, <code>innerHTML</code> XSS, SQL concatenation, hardcoded localhost, CORS wildcard, sync I/O</div></div>
+      <div class="tech-block">
+        <span class="comment">// All 4 scanners run simultaneously</span><br>
+        <span class="keyword">const</span> [secrets, deps, pii, smells] = <span class="keyword">await</span> <span class="fn">Promise.all</span>([<br>
+        &nbsp;&nbsp;<span class="fn">secretScanner.scan</span>(<span class="string">repoPath</span>),<br>
+        &nbsp;&nbsp;<span class="fn">depScanner.scan</span>(<span class="string">repoPath</span>),<br>
+        &nbsp;&nbsp;<span class="fn">piiScanner.scan</span>(<span class="string">repoPath</span>),<br>
+        &nbsp;&nbsp;<span class="fn">codeSmellScanner.scan</span>(<span class="string">repoPath</span>),<br>
+        ]);
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>2. AI Simulation Engine (the USP)</h4>
+      <div class="tech-label">MODEL CONTEXT PROTOCOL (MCP) AGENTIC LOOP</div>
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Start target app</strong> on a random port via <code>spawn('node', ['server.js'])</code> with <code>PORT</code> env var. HTTP poll until responsive.</div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Spawn Playwright MCP server</strong> via <code>@modelcontextprotocol/sdk</code> Client + StdioClientTransport. Headless Chromium browser.</div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>List 21 browser tools</strong> from MCP: <code>browser_navigate</code>, <code>browser_click</code>, <code>browser_fill</code>, <code>browser_snapshot</code>, <code>browser_evaluate</code>, <code>browser_console_messages</code>, <code>browser_handle_dialog</code>...</div></div>
+      <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>Convert MCP tool schemas</strong> to Anthropic API tool format. Pass to Claude Sonnet 4.6 with a security-testing system prompt.</div></div>
+      <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Agentic loop (up to 15 turns):</strong><br>
+        Claude calls <code>browser_navigate</code> → MCP executes → returns <strong>accessibility tree</strong> (NOT screenshots)<br>
+        Claude calls <code>browser_fill</code> → types XSS payload into input<br>
+        Claude calls <code>browser_click</code> → submits form<br>
+        Claude calls <code>browser_evaluate</code> → runs JS to check DOM<br>
+        Each tool result feeds back → Claude decides next action</div></div>
+      <div class="flow-step"><div class="flow-num">6</div><div class="flow-text"><strong>Post-loop verification:</strong><br>
+        Check console for runtime errors (deduplicated, metadata filtered)<br>
+        Evaluate DOM: <code>innerHTML vs textContent</code> comparison to detect real unescaped XSS<br>
+        <code>browser_handle_dialog</code> detection = confirmed XSS (alert() actually fired)</div></div>
+
+      <div class="tech-block">
+        <span class="comment">// The MCP agentic loop</span><br>
+        <span class="keyword">for</span> (<span class="keyword">let</span> turn = 0; turn < 15; turn++) {<br>
+        &nbsp;&nbsp;<span class="keyword">const</span> response = <span class="keyword">await</span> <span class="fn">anthropic.messages.create</span>({<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;model: <span class="string">'claude-sonnet-4-6'</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;tools: anthropicTools, <span class="comment">// 21 MCP browser tools</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;messages,<br>
+        &nbsp;&nbsp;});<br>
+        &nbsp;&nbsp;<span class="comment">// Route tool calls to MCP server</span><br>
+        &nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">const</span> block <span class="keyword">of</span> response.content) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (block.type === <span class="string">'tool_use'</span>) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> result = <span class="keyword">await</span> <span class="fn">mcpClient.callTool</span>({<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name: block.name, arguments: block.input<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;}<br>
+        }
+      </div>
+
+      <p style="color:#888; font-size:13px; margin-top:12px;"><strong style="color:#00F0FF;">Key insight:</strong> Claude doesn't see screenshots. It gets the accessibility tree — every element with role, name, and state. That's why it reliably finds inputs, buttons, and forms without guessing CSS selectors.</p>
+    </div>
+
+    <div class="card">
+      <h4>3. Scoring Algorithm</h4>
+      <div class="tech-block">
+        score = 100<br>
+        <span class="fn">CRITICAL</span> issues: <span class="string">-15 each</span> (leaked keys, eval, confirmed XSS)<br>
+        <span class="fn">HIGH</span> issues: &nbsp;&nbsp;&nbsp;<span class="string">-8 each</span> &nbsp;(passwords, innerHTML, PII logging)<br>
+        <span class="fn">MEDIUM</span> issues: &nbsp;<span class="string">-3 each</span> &nbsp;(empty catch, email exposure)<br>
+        <span class="fn">LOW</span> issues: &nbsp;&nbsp;&nbsp;&nbsp;<span class="string">-1 each</span> &nbsp;(console.log)<br>
+        score = <span class="fn">Math.max</span>(0, score)<br><br>
+        Grade: A+ (97+) → F (&lt;40)<br>
+        Verdict: GO (70+) | WARNING (40-69) | NO-GO (&lt;40)
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>4. Knowledge Base</h4>
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>SQLite with WAL mode</strong> for concurrent reads. Three tables: <code>scans</code>, <code>issues</code>, <code>patterns</code></div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">Every scan does: <code>INSERT INTO patterns ... ON CONFLICT(error_type) DO UPDATE SET frequency = frequency + 1</code></div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">After 34 scans: <strong>50 unique patterns, 11,540 total issues</strong>. Top: Email leaks 4,335x, Console.log 1,196x</div></div>
+    </div>
+
+    <div class="card">
+      <h4>5. Five AI Domain Agents</h4>
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">All 5 run in <strong>Promise.all</strong> against Claude Sonnet 4.6 — parallel, not sequential</div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">Each gets: file list + scan results summary. Each has a domain-specific system prompt.</div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">Each outputs: assessment + <strong>copy-paste fix prompt</strong> the developer gives to Cursor/Copilot</div></div>
+      <div class="flow-step"><div class="flow-num">4</div><div class="flow-text">Domains: Security, UX, Performance, Scalability, Production Readiness</div></div>
+    </div>
+
+    <div class="card">
+      <h4>6. GitHub Action CI/CD</h4>
+      <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">String template generates <code>.github/workflows/vibecheck.yml</code></div></div>
+      <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">Clones VibeCheck repo on <strong>GitHub's Ubuntu runners</strong>, runs 4 scanners against user's code</div></div>
+      <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">Score below 40 → <code>process.exit(1)</code> → CI fails. Tested live on real repo — push failed.</div></div>
+    </div>
+
+    <div class="hardest">
+      <h4>If asked: "What was the hardest technical challenge?"</h4>
+      <div class="script-line"><span class="speaker">Arun says:</span>
+        Connecting Claude to the browser via MCP. The Anthropic API returns tool_use blocks, but we need to route them to Playwright's MCP server and feed the results back. We built a bridge: MCP tool schemas get converted to Anthropic tool format, tool calls get routed to the MCP client, and tool results get fed back as tool_result messages. It's a custom agentic loop — 15 turns of Claude driving a real browser through structured tool calls, not screenshots.
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLES TAB -->
+  <div id="roles" class="section">
+    <div class="card">
+      <h3>Team Positions During Judging</h3>
+      <div class="role-card"><div class="role-avatar" style="background:#00F0FF">D</div><div class="role-info"><div class="name">Dev — Presenter</div><div class="desc">Talks. Drives the demo. Answers non-technical questions. Stands front and center.</div></div></div>
+      <div class="role-card"><div class="role-avatar" style="background:#FF4ECD">A</div><div class="role-info"><div class="name">Arun — Technical Lead</div><div class="desc">Sits next to Dev. Handles technical deep-dives. Drives the laptop if needed.</div></div></div>
+      <div class="role-card"><div class="role-avatar" style="background:#FFB84D">Y</div><div class="role-info"><div class="name">Yash — Demo Support</div><div class="desc">Stands ready. Confirms demo repos are his. Can talk about the broken apps he built.</div></div></div>
+      <div class="role-card"><div class="role-avatar" style="background:#7B61FF">Ab</div><div class="role-info"><div class="name">Abhijay — Backup</div><div class="desc">Has backup video ready. Jumps in if live demo crashes.</div></div></div>
+      <div class="role-card"><div class="role-avatar" style="background:#00E5C0">Ad</div><div class="role-info"><div class="name">Adaa — Deck</div><div class="desc">Has pitch deck ready. Can show slides if judges want high-level overview.</div></div></div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST TAB -->
+  <div id="checklist" class="section">
+    <div class="card">
+      <h3>Pre-Demo Setup</h3>
+      <div class="checklist">
+        <label><input type="checkbox"><span>Laptop plugged in and charged</span></label>
+        <label><input type="checkbox"><span>ANTHROPIC_API_KEY set in terminal</span></label>
+        <label><input type="checkbox"><span>npm run dev running (backend 3001 + frontend 5173)</span></label>
+        <label><input type="checkbox"><span>Browser at localhost:5173 — zoom 150%</span></label>
+        <label><input type="checkbox"><span>Broken app path ready: /tmp/test-vibe-app</span></label>
+        <label><input type="checkbox"><span>Clean app path ready: /tmp/clean-vibe-app</span></label>
+        <label><input type="checkbox"><span>Pre-scan both repos once (cached for speed)</span></label>
+        <label><input type="checkbox"><span>Abhijay's backup video ready</span></label>
+        <label><input type="checkbox"><span>Adaa's deck on USB</span></label>
+        <label><input type="checkbox"><span>Extension cord brought</span></label>
+        <label><input type="checkbox"><span>Dev practiced 3+ times</span></label>
+        <label><input type="checkbox"><span>Team knows who answers what</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY TAB -->
+  <div id="emergency" class="section">
+    <div class="card">
+      <h3>When Things Go Wrong</h3>
+      <div class="emergency"><div class="problem">Live demo crashes</div><div class="solution">Abhijay plays backup video. "Let me show you the recording." Never say "it was working 5 minutes ago."</div></div>
+      <div class="emergency"><div class="problem">Scan takes too long</div><div class="solution">Talk architecture while loading. "Under the hood, 4 scanners run in parallel with Playwright MCP..."</div></div>
+      <div class="emergency"><div class="problem">AI Simulation fails (rate limit)</div><div class="solution">Skip it. "Static analysis found the issues. Let me show the code heatmap." The scripted fallback still runs.</div></div>
+      <div class="emergency"><div class="problem">WiFi dies</div><div class="solution">Scan local path /tmp/test-vibe-app — works completely offline.</div></div>
+      <div class="emergency"><div class="problem">Judges ask to see code</div><div class="solution">Open github.com/Arun07AK/vibecheck. Show commit history.</div></div>
+      <div class="emergency"><div class="problem">Don't know the answer</div><div class="solution">"Great question. We haven't explored that yet, but our hypothesis is..." Honesty wins.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
