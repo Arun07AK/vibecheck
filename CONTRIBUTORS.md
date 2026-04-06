@@ -8,11 +8,13 @@ VibeCheck was built for Eclipse 6.0 (ACM Thapar Student Chapter, April 2026) by 
 - Sole engineer on the technical product
 - Built end-to-end: backend, all 4 static scanners (secrets, dependencies, PII, code smells), Playwright MCP integration, the Claude Sonnet 4.6 agentic loop, the 5 specialized AI agents, the SQLite knowledge base, the scoring engine, and the entire React frontend
 - Architected the Model Context Protocol bridge connecting Claude to a real headless browser via 21 structured tool calls
+- Co-led technology assessment and stack decisions (with Dev Ariwala)
 
 ## Team Contributions
 
-**Dev Ariwala** — Ideation, UI polish, pitch presenter
+**Dev Ariwala** — Ideation, technology assessment, UI polish, pitch presenter
 - Co-ideated the product concept
+- Co-led technology assessment and stack decisions (with Arun AK)
 - Contributed to UI design refinements
 - Presented the project to judges in the pitch round
 
