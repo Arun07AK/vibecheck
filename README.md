@@ -76,4 +76,4 @@ ANTHROPIC_API_KEY=your-key npm run dev
 
 **Pipped Pipers** — Eclipse 6.0, ACM Thapar Student Chapter
 
-Arun AK | Dev Ariwala | Yash Jag | Abhijay | Adaa
+Arun AK | Dev Ariwala | Yash Jagwan | Abhijay Nagal | Adaa Goyal
